@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller=function($window, spUtil, spModal, $timeout) {
+	/* widget controller */
+	var c = this;
+	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
+	c.isMobile = spUtil.isMobile();
+	
+	c.data.headers = {
+		"Authorization": "Bearer abc123xyz",
+		"Content-Type": "application/json",
+		"Accept": "application/json"
+	};
+
+	c.data.headersNew = [{
+		"key" : "Authorization",
+		"value" : "Bearer abc123xyz",
+		"editingKey" : false,
+		"editingValue" : false
+	}, {
+		"key" : "Content-Type",
+		"value" : "application/json",
+		"editingKey" : false,
+		"editingValue" : false
+	}, {
+		"key" : "Accept",
+		"value" : "application/json",
+		"editingKey" : false,
+		"editingValue" : false
+	}];
+
+	c.startEditing = function(item, elem, event) {
+
+		if(elem == 'key')
+			item.editingKey = true;
+		else if (elem == 'value')
+			item.editingValue = true;
+
+		var element = angular.element(event.currentTarget);
+		var parentTD = angular.element(element).parent();
+		$timeout(function(elem123) {
+			console.log(elem123.children()[0].focus());
+		}, 50, true, parentTD);
+
+	}
+
+	c.doneEditing = function(item, elem, $event) {
+		if(elem == 'key')
+			item.editingKey = false;
+		else if (elem == 'value')
+			item.editingValue = false;
+	}
+
+	c.submit = function () {
+
+		var headersObj = {};
+		c.data.headersNew.forEach(function(header) {
+			headersObj[header.key] = header.value;
+		});
+
+		if(c.data.endpointUrl) {
+			c.server.get({
+				action: 'sendMessage',
+				method: c.data.methodName,
+				endpoint: c.data.endpointUrl,
+				headers: headersObj,
+				body: c.data.requestBody.value
+			}).then(function (resp) {
+				c.data.script.value = resp.data.responseBody;
+				c.data.statusFlag = resp.data.statusFlag;
+				c.data.httpStatus = resp.data.httpStatus;
+			});
+		}
+	}
+
+	c.addHeader = function () {
+
+		if(c.headerKey && c.headerValue){
+
+			var found = false;
+			for(i = 0; i < c.data.headersNew.length; i++) {
+				if(c.data.headersNew[i].key == c.headerKey){
+					found = true;
+					break;
+				}
+			}
+
+			if(!found) {
+				// Push the new item to the headers array
+				c.data.headersNew.push({
+					"key" : c.headerKey,
+					"value" : c.headerValue,
+					"editingKey" : false,
+					"editingValue" : false
+				});
+
+				//Clear the TextBoxes.
+				c.headerKey = "";
+				c.headerValue = "";
+			}
+		}
+
+	};
+
+	c.removeHeader = function (item, index) {
+		//Find the record using Index from Array.
+
+		spModal.confirm("Do you want to delete: " + item.key + " ?").then(function(confirmed) {
+			if(confirmed) {
+				//c.headerKey = key;
+				//c.headerValue = c.data.headers[key];
+
+				//Remove the item from Array using Index.
+				c.data.headersNew.splice(index, 1);
+			}
+		});
+	}
+
+	c.copy = function (str) {
+		if(str) {
+			navigator.clipboard.writeText(str).then(function (resp) {
+				spUtil.addTrivialMessage("Code copied to clipboard");
+			});	
+		} else {
+			spUtil.addErrorMessage("Nothing to copy");
+		}
+	}
+};]]></client_script>
+        <controller_as>c</controller_as>
+        <css>*:not(.glyphicon) {
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.my-group .ig-elem1 {
+  width: 25%;
+  background-color: #cbe4f7;
+}
+
+.vertical-middle {
+  vertical-align: middle;
+}
+
+.no-bottom-margin {
+  margin-bottom: 0px;
+}
+
+.my-group .ig-elem2 {
+  width: 75%;
+}
+
+.no-left-right-padding {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.panel-title {
+  font-weight: bold;
+  font-size: 1.7rem;
+}
+
+.bg-edit {
+  background: #FFF4A3;
+}
+
+textarea {
+  height: 161px;
+  width: 100%;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+  border: none;
+  resize: none;
+}
+
+
+/* Small devices (tablets, 768px and up) */
+@media (max-width: 991px) {
+  #request-body, #response-text {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Medium devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  #request-body {
+    padding-left: 0;
+  }
+
+  #response-text {
+    padding-right: 0;
+  }
+}
+
+.no-padding {
+  padding: 0;
+}
+
+.glyphicon-trash {
+  color: red;
+}
+
+td
+{
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.full-span {
+  display: block;
+}
+
+.editable-input {
+  width: 100%;
+  border: none;
+  background: #FFF4A3;
+}
+
+.editable-input:focus {
+  box-shadow: none;
+}
+
+
+.iframe-preview {
+  width: 100%;
+  height: 100%;
+  padding-top: 5px;
+  border: none;
+}
+
+.footer-height {
+  height: 20px;
+}
+
+/* above each code section */
+.minibar {
+  padding: 2px;
+
+  .btn {
+    border: none;
+  }
+}
+
+input[type=checkbox] {
+  margin-right: .25em;
+}
+
+.check {
+  white-space: nowrap;
+  margin-bottom: 0;
+  margin-left: 1rem;
+}
+
+.CodeMirror {
+  border-radius: 0px 0px 5px 5px;
+  border: none;
+}
+
+pre.CodeMirror-line {
+  font-size: 14px !important;
+}
+
+.animate {
+  transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+  -webkit-transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+}
+
+
+.relative {
+  position: relative;
+}
+
+.button-nav {
+  .btn-group {
+    margin-left: 0.5rem;
+  }
+
+  button {
+    min-width: 40px;
+  }
+}
+
+.doc {
+  overflow: auto;
+  width: 98%;
+}
+
+.doc-icons {
+  position: absolute;
+  padding: 5px;
+  right: 0px;
+}
+
+.dropdown-icon {
+  padding-right: 10px;
+}
+
+.sp-dep {
+  width: 200px;
+}
+
+.read-only-message {
+  text-align: center;
+
+  .alert {
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+
+}
+
+.cm-s-snc_readonly { background-color: #e6e8ea; color: #444444; }
+
+.cm-s-snc_readonly_readonly span.cm-meta { color: #FF1717; }
+
+.cm-s-snc_readonly span.cm-keyword { font-weight: bold; color: #7F0055; }
+
+.cm-s-snc_readonly span.cm-atom { color: #219; }
+
+.cm-s-snc_readonly span.cm-number { color: #164; }
+
+.cm-s-snc_readonly span.cm-def { color: #00f; }
+
+.cm-s-snc_readonly span.cm-variable { color: black; }
+
+.cm-s-snc_readonly span.cm-variable-2 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-variable-3 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-property { color: black; }
+
+.cm-s-snc_readonly span.cm-operator { color: black; }
+
+.cm-s-snc_readonly span.cm-comment { color: #3F7F5F; }
+
+.cm-s-snc_readonly span.cm-string { color: #2A00FF; }
+
+.cm-s-snc_readonly span.cm-string-2 { color: #f50; }
+
+.cm-s-snc_readonly span.cm-error { color: #f00; }
+
+.cm-s-snc_readonly span.cm-qualifier { color: #555; }
+
+.cm-s-snc_readonly span.cm-builtin { color: #30a; }
+
+.cm-s-snc_readonly span.cm-bracket { color: #cc7; }
+
+.cm-s-snc_readonly span.cm-tag { color: #170; }
+
+.cm-s-snc_readonly span.cm-attribute { color: #00c; }
+
+.cm-s-snc_readonly span.cm-link { color: #219; }
+
+.cm-s-snc_readonly .CodeMirror-matchingbracket {
+  color: OrangeRed !important;;
+}
+
+// readonly
+[role="editor-container"][data-readonly="true"] {
+  .CodeMirror {
+    background-color: #F7F7F7 !important;
+  }
+}</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>mailman_widget</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Mailman Widget</name>
+        <option_schema/>
+        <public>true</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+
+	if(!input) {
+		data.script = {
+			"value": JSON.stringify({}, null, 4)
+		};
+
+		data.requestBody = {
+			"value": JSON.stringify({}, null, 4)
+		};
+	}
+
+	if(input && input.action == 'sendMessage') {
+		try { 
+			var r = new sn_ws.RESTMessageV2();
+			r.setEndpoint(input.endpoint);
+			r.setHttpMethod(input.method);
+			for(var key in input.headers) {
+				r.setRequestHeader(key, input.headers[key]);
+			}
+
+			if(input.body){
+				r.setRequestBody(input.body);
+			}
+
+			var response = r.execute();
+			data.httpStatus = response.getStatusCode();
+
+			if(data.httpStatus >= 200 && data.httpStatus <= 299)
+				data.statusFlag = true;
+			else
+				data.statusFlag = false;
+
+			try {
+				data.responseBody = JSON.stringify(JSON.parse(response.getBody()), null, 4);				
+			} catch (e) {
+				data.responseBody = response.getBody();
+			}
+
+		}
+		catch(ex) {
+			data.output = ex;
+			gs.addErrorMessage(data.output);
+		} 
+	}
+
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-05-30 16:20:56</sys_created_on>
+        <sys_id>0cb5ee76974be51056e8b3e6f053afa4</sys_id>
+        <sys_mod_count>484</sys_mod_count>
+        <sys_name>Mailman Widget</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>sp_widget_0cb5ee76974be51056e8b3e6f053afa4</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-06-07 20:49:57</sys_updated_on>
+        <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
+
+<div class="container-fluid">
+  <div class="row" id="endpoint-input">
+    <form name="inputForm">
+      <div class="col-xs-12 form-group no-left-right-padding">
+        <div class="input-group my-group">
+          <select class="input-group-addon bg-success selectpicker form-control ig-elem1" ng-init="c.data.methodName = 'GET'" ng-model="c.data.methodName">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+          <input id="urlInput" name="urlInput" type="text" class="form-control ig-elem2" placeholder="Enter endpoint URL" ng-model="c.data.endpointUrl" ng-pattern="c.regex" ng-required="true">
+          <span class="input-group-btn ig-elem3">
+            <button class="btn btn-success" ng-disabled="!inputForm.urlInput.$valid" type="submit" ng-click="c.submit()">
+              <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
+            </button>
+          </span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="row" id="headers">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h3 class="panel-title">Request Headers</h3>
+      </div>
+      <div class="panel-body">
+        <table class="table no-bottom-margin" width="100%">
+          <thead>
+            <tr>
+              <th width="30%">Key</th>
+              <th width="50%">Value</th>
+              <th width="20%" class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="item in c.data.headersNew">
+              <td width="30%" ng-class="{'bg-edit': item.editingKey}">
+                <span class="full-span" ng-if="!item.editingKey" ng-click="c.startEditing(item, 'key', $event)">{{item.key}}</span>
+                <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
+              </td>
+              <td width="50%" ng-class="{'bg-edit': item.editingValue}">
+                <span class="full-span" ng-if="!item.editingValue" ng-click="c.startEditing(item, 'value', $event)">{{item.value}}</span>
+                <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')"/>
+              </td>
+              <td width="20%" class="text-center vertical-middle">
+                <a role="button" ng-click="c.removeHeader(item, $index)"><span class="glyphicon glyphicon-trash"></span></a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-footer">
+        <div class="row full-width">
+          <div class="col-xs-4"><input type="text" ng-model="c.headerKey" placeholder="Key" class="form-control" aria-label="key" id="inputKey"/></div>
+          <div class="col-xs-6"><input type="text" ng-model="c.headerValue" placeholder="Value" class="form-control" aria-label="value" id="inputValue"/></div>
+          <div class="col-xs-2"><button class="btn btn-success" type="button" ng-click="c.addHeader()"><span class="glyphicon glyphicon-ok"></span></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-md-6 col col-sm-12 col-xs-12" id="request-body">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            Request Body
+            <a ng-click="c.copy(c.data.requestBody.value)" class="pull-right" role="button"><span class="glyphicon glyphicon-copy"></span></a>
+          </h3>
+        </div>
+        <div class="panel-body no-padding">
+          <textarea class="form-control" ng-model="c.data.requestBody.value" ng-if="c.isMobile"></textarea>
+          <sp-script-editor id="editor" field="c.data.requestBody" data-length="4000" sn-disabled="false" sn-widget-scope-js-level="traditional" sn-server-side="false" ng-if="!c.isMobile" />-->
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col col-sm-12 col-xs-12 no-left-right-padding" id="response-text">
+      <div class="panel" ng-class="{'panel-default': c.data.statusFlag==undefined, 'panel-success': c.data.statusFlag==true, 'panel-danger': c.data.statusFlag==false}">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span>
+            <a ng-click="c.copy(c.data.script.value)" class="pull-right" role="button"><span class="glyphicon glyphicon-copy"></span></a>
+          </h3>
+        </div>
+        <div class="panel-body no-padding">
+          <div>
+            <sp-script-editor id="editor" field="c.data.script" data-length="4000" class="form-control" sn-disabled="true" sn-widget-scope-js-level="traditional" sn-server-side="false" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>]]></template>
+    </sp_widget>
+</record_update>

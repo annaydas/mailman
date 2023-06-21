@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_row">
+    <sp_row action="DELETE">
+        <class_name/>
+        <order>1</order>
+        <sp_column/>
+        <sp_container display_value="Mailman - Container 2">51542e76974be51056e8b3e6f053af84</sp_container>
+        <sys_class_name>sp_row</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-05-30 16:15:11</sys_created_on>
+        <sys_id>b7546676974be51056e8b3e6f053afff</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>1</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>sp_row_b7546676974be51056e8b3e6f053afff</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-05-30 16:15:11</sys_updated_on>
+    </sp_row>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</application>
+        <file_path/>
+        <instance_id>137bbb49db5595180ae3ac44d49619de</instance_id>
+        <instance_name>dev131733</instance_name>
+        <name>sp_row_b7546676974be51056e8b3e6f053afff</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_row"><sp_row action="INSERT_OR_UPDATE"><class_name/><order>1</order><sp_column/><sp_container display_value="Mailman - Container 2">51542e76974be51056e8b3e6f053af84</sp_container><sys_class_name>sp_row</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-05-30 16:15:11</sys_created_on><sys_id>b7546676974be51056e8b3e6f053afff</sys_id><sys_mod_count>0</sys_mod_count><sys_name>1</sys_name><sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package><sys_policy/><sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope><sys_update_name>sp_row_b7546676974be51056e8b3e6f053afff</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-05-30 16:15:11</sys_updated_on></sp_row></record_update>]]></payload>
+        <payload_hash>-1538533809</payload_hash>
+        <record_name>1</record_name>
+        <reverted_from/>
+        <source>6cb32e76974be51056e8b3e6f053af7d</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-05-30 16:15:11</sys_created_on>
+        <sys_id>3754a676974be51056e8b3e6f053af01</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>1886d7125a40000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-05-30 16:15:11</sys_updated_on>
+        <type>Row</type>
+        <update_guid>7b54a676794be510e1bdeda181ce2b00</update_guid>
+        <update_guid_history>7b54a676794be510e1bdeda181ce2b00:-1538533809</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete display_value="1">f5a4aeb6974be51056e8b3e6f053af4b</sys_audit_delete>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-05-30 16:16:25</sys_created_on>
+        <sys_db_object display_value="" name="sp_row">sp_row</sys_db_object>
+        <sys_id>088c8890c8fb44d28179fa72d29437b9</sys_id>
+        <sys_metadata>b7546676974be51056e8b3e6f053afff</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>1</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_scope_delete display_value="">ddccbcd626c14b68b5524bfd43c1dd10</sys_scope_delete>
+        <sys_update_name>sp_row_b7546676974be51056e8b3e6f053afff</sys_update_name>
+        <sys_update_version display_value="sp_row_b7546676974be51056e8b3e6f053afff">3754a676974be51056e8b3e6f053af01</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-05-30 16:16:25</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>

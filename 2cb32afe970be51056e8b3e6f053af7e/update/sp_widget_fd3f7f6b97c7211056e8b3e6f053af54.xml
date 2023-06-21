@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller=function(spUtil) {
+	/* widget controller */
+	var c = this;
+
+	c.tabs = [];
+
+	spUtil.get("mailman_widget").then(function(response) {
+		c.tabs.push({"id": c.tabs.length + 1, "widget": response, "active":true});
+	});
+
+	c.closeTab = function (index) {
+		if(c.tabs.length > 1) {
+			c.tabs.splice(index, 1);
+		}
+	}
+
+	c.openTab = function(index) {
+		spUtil.get("mailman_widget").then(function(response) {
+			c.tabs.push({"id": c.tabs.length + 1, "widget": response, "active":true});
+		});
+
+	}
+
+	c.tabSelected = function() {
+		$('div.CodeMirror:visible').each(function(i, el){
+			el.CodeMirror.refresh();
+		});
+	}
+
+
+};]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.padding-all-15 {
+  padding-top: 20px;
+}
+
+.font-red {
+  color: red;
+}
+
+.font-gray {
+  color: gray;
+}
+
+.font-large {
+  font-size: 1.7rem;
+}
+
+li.mailman-tab &gt; a {
+  color: inherit;
+}
+
+//
+li.mailman-tab &gt; a:hover {
+  background: #f8fcf5;
+  border: 1px solid #e6ede1;
+  border-bottom: none;//
+}
+
+li.active &gt; a {
+  font-weight: bold;
+}
+
+//
+li.active &gt; a,
+li.active &gt; a:focus,
+li.active &gt; a:active,
+li.active &gt; a:hover,
+li.active &gt; a:focus-visible {
+  background: #d5ebc5;
+  cursor: pointer;
+  outline: 0;
+  border:none;
+  box-shadow:none;
+}
+
+//
+li &gt; a:focus-visible,
+li &gt; a:focus {
+  background: #d5ebc5;
+  box-shadow:none;  
+}
+
+//
+li.active:not(.new-btn-tab) &gt; a::after {
+  content: "";
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+  width: 100%;
+  height: 5px;
+  background: #228b22;
+}
+
+.nav-tabs.nav-justified &gt; .active &gt; a,
+.nav-tabs.nav-justified &gt; .active &gt; a:hover,
+.nav-tabs.nav-justified &gt; .active &gt; a:focus {
+  border-bottom: 1px solid #ddd;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+
+li.new-btn-tab &gt; a,
+li.new-btn-tab &gt; a:hover,
+li.new-btn-tab &gt; a:focus,
+li.new-btn-tab &gt; a:active {
+  background: none;
+  cursor: pointer;
+  outline: 0;
+  box-shadow:none;
+  border-bottom: 1px solid #ddd;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>mailman_body</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Mailman Body</name>
+        <option_schema/>
+        <public>true</public>
+        <roles/>
+        <script><![CDATA[(function() {  /* populate the 'data' object */  /* e.g., data.table = $sp.getValue('table'); */})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-06-02 06:47:31</sys_created_on>
+        <sys_id>fd3f7f6b97c7211056e8b3e6f053af54</sys_id>
+        <sys_mod_count>255</sys_mod_count>
+        <sys_name>Mailman Body</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>sp_widget_fd3f7f6b97c7211056e8b3e6f053af54</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-06-05 05:48:52</sys_updated_on>
+        <template><![CDATA[<div class="container">
+  <uib-tabset id="mailman-tabs" justified="true">
+
+    <uib-tab class="mailman-tab" ng-repeat="tab in c.tabs track by $index" select="c.tabSelected()" active="tab.active">
+
+      <uib-tab-heading class="font-large">
+        Tab {{$index + 1}}
+        <a class="" role="button" ng-click="c.closeTab($index)"><i class="pull-right font-red glyphicon glyphicon-remove"></i></a>
+      </uib-tab-heading>
+
+      <div id="tab-body" class="padding-all-15">
+        <sp-widget widget="tab.widget"></sp-widget>
+      </div>
+
+    </uib-tab>
+
+    <uib-tab class="new-btn-tab" ng-click="c.openTab($index)">
+      <uib-tab-heading><a role="button"><i class="glyphicon glyphicon-plus font-gray"></i></a></uib-tab-heading>
+    </uib-tab>
+
+  </uib-tabset>
+
+</div>]]></template>
+    </sp_widget>
+</record_update>

@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="DELETE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller=function(spUtil) {
+	/* widget controller */
+	var c = this;
+
+	spUtil.get("mailman_widget").then(function(response) {
+		c.widgt= response;
+	});	
+
+	/*	c.addWidget = function() {
+		spUtil.get("mailman_widget").then(function(response) {
+			c.widgt.push(response);
+		});	
+	}
+*/
+};]]></client_script>
+        <controller_as>c</controller_as>
+        <css>/*
+CSS for the main interaction
+*/
+.tabset &gt; input[type="radio"] {
+  position: absolute;
+  left: -200vw;
+}
+
+.tabset .tab-panel {
+  display: none;
+}
+
+.tabset &gt; input:first-child:checked ~ .tab-panels &gt; .tab-panel:first-child,
+.tabset &gt; input:nth-child(3):checked ~ .tab-panels &gt; .tab-panel:nth-child(2),
+.tabset &gt; input:nth-child(5):checked ~ .tab-panels &gt; .tab-panel:nth-child(3),
+.tabset &gt; input:nth-child(7):checked ~ .tab-panels &gt; .tab-panel:nth-child(4),
+.tabset &gt; input:nth-child(9):checked ~ .tab-panels &gt; .tab-panel:nth-child(5),
+.tabset &gt; input:nth-child(11):checked ~ .tab-panels &gt; .tab-panel:nth-child(6) {
+  display: block;
+}
+
+/*
+Styling
+*/
+body {
+  font: 16px/1.5em "Overpass", "Open Sans", Helvetica, sans-serif;
+  color: #333;
+  font-weight: 300;
+}
+
+.tabset &gt; label {
+  position: relative;
+  display: inline-block;
+  padding: 15px 15px 25px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tabset &gt; label::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  bottom: 10px;
+  width: 22px;
+  height: 4px;
+  background: #8d8d8d;
+}
+
+input:focus-visible + label {
+  outline: 2px solid rgba(0,102,204,1);
+  border-radius: 3px;
+}
+
+.tabset &gt; label:hover,
+.tabset &gt; input:focus + label,
+.tabset &gt; input:checked + label {
+  color: #06c;
+}
+
+.tabset &gt; label:hover::after,
+.tabset &gt; input:focus + label::after,
+.tabset &gt; input:checked + label::after {
+  background: #06c;
+}
+
+.tabset &gt; input:checked + label {
+  border-color: #ccc;
+  border-bottom: 1px solid #fff;
+  margin-bottom: -1px;
+}
+
+.tab-panel {
+  padding: 30px 0;
+  border-top: 1px solid #ccc;
+}
+
+/*
+Demo purposes only
+*/
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+body {
+  padding: 30px;
+}
+
+.tabset {
+  max-width: 65em;
+}</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>mailman_tabbed_body</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Mailman Tabbed Body</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {  /* populate the 'data' object */  /* e.g., data.table = $sp.getValue('table'); */})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-06-03 10:53:39</sys_created_on>
+        <sys_id>74218a049713211056e8b3e6f053af6d</sys_id>
+        <sys_mod_count>21</sys_mod_count>
+        <sys_name>Mailman Tabbed Body</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>sp_widget_74218a049713211056e8b3e6f053af6d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-06-03 11:37:26</sys_updated_on>
+        <template><![CDATA[<div>
+
+  <!-- 
+
+  Radio version of tabs.
+
+  Requirements:
+  - not rely on specific IDs for CSS (the CSS shouldn't need to know specific IDs)
+  - flexible for any number of unkown tabs [2-6]
+  - accessible
+
+  Caveats:
+  - since these are checkboxes the tabs not tab-able, need to use arrow keys
+
+  Also worth reading:
+  http://simplyaccessible.com/article/danger-aria-tabs/
+-->
+
+  <div class="tabset">
+    <!-- Tab 1 -->
+    <input type="radio" name="tabset" id="tab1" aria-controls="marzen" checked>
+    <label for="tab1">Märzen</label>
+    <!-- Tab 2 -->
+    <input type="radio" name="tabset" id="tab2" aria-controls="rauchbier">
+    <label for="tab2">Rauchbier</label>
+    <!-- Tab 3 -->
+    <input type="radio" name="tabset" id="tab3" aria-controls="dunkles">
+    <label for="tab3">Dunkles Bock</label>
+
+    <div class="tab-panels">
+      <section id="marzen" class="tab-panel">
+        <h2>6A. Märzen</h2>
+        <sp-widget widget="c.widgt"></sp-widget>
+      </section>
+      <section id="rauchbier" class="tab-panel">
+        <h2>6B. Rauchbier</h2>
+        <sp-widget widget="c.widgt"></sp-widget>
+      </section>
+      <section id="dunkles" class="tab-panel">
+        <h2>6C. Dunkles Bock</h2>
+        <sp-widget widget="c.widgt"></sp-widget>
+      </section>
+    </div>
+
+  </div>
+
+  <p><small>Source: <cite><a href="https://www.bjcp.org/stylecenter.php">BJCP Style Guidelines</a></cite></small></p>
+  <sp-widget widget="c.widgt"></sp-widget>
+
+  <a role="button" ng-click="c.addWidget()">
+    <span class="glyphicon glyphicon-plus"></span>
+  </a>
+</div>]]></template>
+    </sp_widget>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</application>
+        <file_path/>
+        <instance_id>137bbb49db5595180ae3ac44d49619de</instance_id>
+        <instance_name>dev131733</instance_name>
+        <name>sp_widget_74218a049713211056e8b3e6f053af6d</name>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sp_widget"&gt;&lt;sp_widget action="INSERT_OR_UPDATE"&gt;&lt;category&gt;custom&lt;/category&gt;&lt;client_script&gt;&lt;![CDATA[api.controller=function(spUtil) {
+	/* widget controller */
+	var c = this;
+
+	spUtil.get("mailman_widget").then(function(response) {
+		c.widgt= response;
+	});	
+
+	/*	c.addWidget = function() {
+		spUtil.get("mailman_widget").then(function(response) {
+			c.widgt.push(response);
+		});	
+	}
+*/
+};]]&gt;&lt;/client_script&gt;&lt;controller_as&gt;c&lt;/controller_as&gt;&lt;css&gt;/*
+CSS for the main interaction
+*/
+.tabset &amp;gt; input[type="radio"] {
+  position: absolute;
+  left: -200vw;
+}
+
+.tabset .tab-panel {
+  display: none;
+}
+
+.tabset &amp;gt; input:first-child:checked ~ .tab-panels &amp;gt; .tab-panel:first-child,
+.tabset &amp;gt; input:nth-child(3):checked ~ .tab-panels &amp;gt; .tab-panel:nth-child(2),
+.tabset &amp;gt; input:nth-child(5):checked ~ .tab-panels &amp;gt; .tab-panel:nth-child(3),
+.tabset &amp;gt; input:nth-child(7):checked ~ .tab-panels &amp;gt; .tab-panel:nth-child(4),
+.tabset &amp;gt; input:nth-child(9):checked ~ .tab-panels &amp;gt; .tab-panel:nth-child(5),
+.tabset &amp;gt; input:nth-child(11):checked ~ .tab-panels &amp;gt; .tab-panel:nth-child(6) {
+  display: block;
+}
+
+/*
+Styling
+*/
+body {
+  font: 16px/1.5em "Overpass", "Open Sans", Helvetica, sans-serif;
+  color: #333;
+  font-weight: 300;
+}
+
+.tabset &amp;gt; label {
+  position: relative;
+  display: inline-block;
+  padding: 15px 15px 25px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tabset &amp;gt; label::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  bottom: 10px;
+  width: 22px;
+  height: 4px;
+  background: #8d8d8d;
+}
+
+input:focus-visible + label {
+  outline: 2px solid rgba(0,102,204,1);
+  border-radius: 3px;
+}
+
+.tabset &amp;gt; label:hover,
+.tabset &amp;gt; input:focus + label,
+.tabset &amp;gt; input:checked + label {
+  color: #06c;
+}
+
+.tabset &amp;gt; label:hover::after,
+.tabset &amp;gt; input:focus + label::after,
+.tabset &amp;gt; input:checked + label::after {
+  background: #06c;
+}
+
+.tabset &amp;gt; input:checked + label {
+  border-color: #ccc;
+  border-bottom: 1px solid #fff;
+  margin-bottom: -1px;
+}
+
+.tab-panel {
+  padding: 30px 0;
+  border-top: 1px solid #ccc;
+}
+
+/*
+Demo purposes only
+*/
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+body {
+  padding: 30px;
+}
+
+.tabset {
+  max-width: 65em;
+}&lt;/css&gt;&lt;data_table&gt;sp_instance&lt;/data_table&gt;&lt;demo_data/&gt;&lt;description/&gt;&lt;docs/&gt;&lt;field_list/&gt;&lt;has_preview&gt;true&lt;/has_preview&gt;&lt;id&gt;mailman_tabbed_body&lt;/id&gt;&lt;internal&gt;false&lt;/internal&gt;&lt;link&gt;&lt;![CDATA[function link(scope, element, attrs, controller) {  }]]&gt;&lt;/link&gt;&lt;name&gt;Mailman Tabbed Body&lt;/name&gt;&lt;option_schema/&gt;&lt;public&gt;false&lt;/public&gt;&lt;roles/&gt;&lt;script&gt;&lt;![CDATA[(function() {  /* populate the 'data' object */  /* e.g., data.table = $sp.getValue('table'); */})();]]&gt;&lt;/script&gt;&lt;servicenow&gt;false&lt;/servicenow&gt;&lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;&lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2023-06-03 10:53:39&lt;/sys_created_on&gt;&lt;sys_id&gt;74218a049713211056e8b3e6f053af6d&lt;/sys_id&gt;&lt;sys_mod_count&gt;21&lt;/sys_mod_count&gt;&lt;sys_name&gt;Mailman Tabbed Body&lt;/sys_name&gt;&lt;sys_package display_value="Mailman" source="x_792082_mailman"&gt;2cb32afe970be51056e8b3e6f053af7e&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_scope display_value="Mailman"&gt;2cb32afe970be51056e8b3e6f053af7e&lt;/sys_scope&gt;&lt;sys_update_name&gt;sp_widget_74218a049713211056e8b3e6f053af6d&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2023-06-03 11:37:26&lt;/sys_updated_on&gt;&lt;template&gt;&lt;![CDATA[&lt;div&gt;
+
+  &lt;!-- 
+
+  Radio version of tabs.
+
+  Requirements:
+  - not rely on specific IDs for CSS (the CSS shouldn't need to know specific IDs)
+  - flexible for any number of unkown tabs [2-6]
+  - accessible
+
+  Caveats:
+  - since these are checkboxes the tabs not tab-able, need to use arrow keys
+
+  Also worth reading:
+  http://simplyaccessible.com/article/danger-aria-tabs/
+--&gt;
+
+  &lt;div class="tabset"&gt;
+    &lt;!-- Tab 1 --&gt;
+    &lt;input type="radio" name="tabset" id="tab1" aria-controls="marzen" checked&gt;
+    &lt;label for="tab1"&gt;Märzen&lt;/label&gt;
+    &lt;!-- Tab 2 --&gt;
+    &lt;input type="radio" name="tabset" id="tab2" aria-controls="rauchbier"&gt;
+    &lt;label for="tab2"&gt;Rauchbier&lt;/label&gt;
+    &lt;!-- Tab 3 --&gt;
+    &lt;input type="radio" name="tabset" id="tab3" aria-controls="dunkles"&gt;
+    &lt;label for="tab3"&gt;Dunkles Bock&lt;/label&gt;
+
+    &lt;div class="tab-panels"&gt;
+      &lt;section id="marzen" class="tab-panel"&gt;
+        &lt;h2&gt;6A. Märzen&lt;/h2&gt;
+        &lt;sp-widget widget="c.widgt"&gt;&lt;/sp-widget&gt;
+      &lt;/section&gt;
+      &lt;section id="rauchbier" class="tab-panel"&gt;
+        &lt;h2&gt;6B. Rauchbier&lt;/h2&gt;
+        &lt;sp-widget widget="c.widgt"&gt;&lt;/sp-widget&gt;
+      &lt;/section&gt;
+      &lt;section id="dunkles" class="tab-panel"&gt;
+        &lt;h2&gt;6C. Dunkles Bock&lt;/h2&gt;
+        &lt;sp-widget widget="c.widgt"&gt;&lt;/sp-widget&gt;
+      &lt;/section&gt;
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+  &lt;p&gt;&lt;small&gt;Source: &lt;cite&gt;&lt;a href="https://www.bjcp.org/stylecenter.php"&gt;BJCP Style Guidelines&lt;/a&gt;&lt;/cite&gt;&lt;/small&gt;&lt;/p&gt;
+  &lt;sp-widget widget="c.widgt"&gt;&lt;/sp-widget&gt;
+
+  &lt;a role="button" ng-click="c.addWidget()"&gt;
+    &lt;span class="glyphicon glyphicon-plus"&gt;&lt;/span&gt;
+  &lt;/a&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;&lt;/sp_widget&gt;&lt;/record_update&gt;</payload>
+        <payload_hash>-1934701254</payload_hash>
+        <record_name>Mailman Tabbed Body</record_name>
+        <reverted_from/>
+        <source>6cb32e76974be51056e8b3e6f053af7d</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-06-03 11:37:26</sys_created_on>
+        <sys_id>0e2bc2cc9713211056e8b3e6f053af35</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>188810c49560000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-06-03 11:37:26</sys_updated_on>
+        <type>Widget</type>
+        <update_guid>062bc2ccbd1321101266e058b9a31635</update_guid>
+        <update_guid_history>062bc2ccbd1321101266e058b9a31635:-1934701254,73ea4600bc532110633aed0bbfcf2ed3:-1634703227,c92ac2cc1f132110acdd6b5b3d72262d:-1809775297,22d982cc3b132110f2d3198b5449cdba:-1598766192,e769828c35132110137e18f432178ec7:-1809775297,1e394a4c1b132110f459e8cfb372b7f8:464579925,adf8828c51132110471ea80599f972bd:85407011,51384ac85a1321100eae6af6df28263f:-939268202,7db642083c132110cab80d3a04800b4c:-2024092134,0b864ac848132110f640a249fac0721b:-1271509307,22f5ce885013211074cffcef95c62d65:-1342187670,5e550688321321105f1b1d157ed084fe:-891408096,81450e043613211068be176e261c85ce:1819421094,bc250e44c6132110398967a4eb0d3c95:-474330101,0864064864132110f9633a024c217b16:1422346541,a2f34e08dc1321106b4e8b09df38fe64:469767636,517306089a1321105368edc1d558e5bc:205313001,d9434ec4d01321107ea9bab9d28bf5f8:-1854929399,43e2cac4721321106896df1a044afd5b:-1926795768,3d228a846b132110340bf6cb56713582:-1655331046,5fd10a008d132110ef9c7a52973b6d8a:625867619,70210e4446132110f59f86243d66f244:483021583</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete display_value="Mailman Tabbed Body">088e7c609793a11056e8b3e6f053af75</sys_audit_delete>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-06-04 19:19:29</sys_created_on>
+        <sys_db_object display_value="" name="sp_widget">sp_widget</sys_db_object>
+        <sys_id>43cd06d2a02f4cc080b5c59aff3b9000</sys_id>
+        <sys_metadata>74218a049713211056e8b3e6f053af6d</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Mailman Tabbed Body</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_scope_delete display_value="">ddccbcd626c14b68b5524bfd43c1dd10</sys_scope_delete>
+        <sys_update_name>sp_widget_74218a049713211056e8b3e6f053af6d</sys_update_name>
+        <sys_update_version display_value="sp_widget_74218a049713211056e8b3e6f053af6d">0e2bc2cc9713211056e8b3e6f053af35</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-06-04 19:19:29</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>
