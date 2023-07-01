@@ -132,13 +132,18 @@
   font-family: 'Ubuntu Mono', monospace;
 }
 
+.btn[disabled] {
+  opacity: 1;
+}
+
 .full-width {
   width: 100%;
 }
 
 .my-group .ig-elem1 {
   width: 25%;
-  background-color: #cbe4f7;
+  background-color: $brand-primary;
+  color: white;
 }
 
 .vertical-middle {
@@ -436,14 +441,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-05-30 16:20:56</sys_created_on>
         <sys_id>0cb5ee76974be51056e8b3e6f053afa4</sys_id>
-        <sys_mod_count>484</sys_mod_count>
+        <sys_mod_count>496</sys_mod_count>
         <sys_name>Mailman Widget</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_0cb5ee76974be51056e8b3e6f053afa4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-06-07 20:49:57</sys_updated_on>
+        <sys_updated_on>2023-06-30 13:03:30</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
@@ -462,7 +467,7 @@ pre.CodeMirror-line {
           </select>
           <input id="urlInput" name="urlInput" type="text" class="form-control ig-elem2" placeholder="Enter endpoint URL" ng-model="c.data.endpointUrl" ng-pattern="c.regex" ng-required="true">
           <span class="input-group-btn ig-elem3">
-            <button class="btn btn-success" ng-disabled="!inputForm.urlInput.$valid" type="submit" ng-click="c.submit()">
+            <button class="btn" ng-class="{'btn-default': !inputForm.urlInput.$valid, 'btn-primary': inputForm.urlInput.$valid}" ng-disabled="!inputForm.urlInput.$valid" type="submit" ng-click="c.submit()">
               <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
             </button>
           </span>
@@ -506,7 +511,7 @@ pre.CodeMirror-line {
         <div class="row full-width">
           <div class="col-xs-4"><input type="text" ng-model="c.headerKey" placeholder="Key" class="form-control" aria-label="key" id="inputKey"/></div>
           <div class="col-xs-6"><input type="text" ng-model="c.headerValue" placeholder="Value" class="form-control" aria-label="value" id="inputValue"/></div>
-          <div class="col-xs-2"><button class="btn btn-success" type="button" ng-click="c.addHeader()"><span class="glyphicon glyphicon-ok"></span></button></div>
+          <div class="col-xs-2"><button class="btn btn-primary" type="button" ng-click="c.addHeader()"><span class="glyphicon glyphicon-ok"></span></button></div>
         </div>
       </div>
     </div>
@@ -514,7 +519,7 @@ pre.CodeMirror-line {
 
   <div class="row">
 
-    <div class="col-md-6 col col-sm-12 col-xs-12" id="request-body">
+    <div class="col-md-6 col-sm-12 col-xs-12" id="request-body">
       <div class="panel panel-primary">
         <div class="panel-heading">
           <h3 class="panel-title">
@@ -529,8 +534,8 @@ pre.CodeMirror-line {
       </div>
     </div>
 
-    <div class="col-md-6 col col-sm-12 col-xs-12 no-left-right-padding" id="response-text">
-      <div class="panel" ng-class="{'panel-default': c.data.statusFlag==undefined, 'panel-success': c.data.statusFlag==true, 'panel-danger': c.data.statusFlag==false}">
+    <div class="col-md-6 col-sm-12 col-xs-12 no-left-right-padding" id="response-text">
+      <div class="panel" ng-class="{'panel-primary': c.data.statusFlag==undefined, 'panel-success': c.data.statusFlag==true, 'panel-danger': c.data.statusFlag==false}">
         <div class="panel-heading">
           <h3 class="panel-title">
             Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span>
