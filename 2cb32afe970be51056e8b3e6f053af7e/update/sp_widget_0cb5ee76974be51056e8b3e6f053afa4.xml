@@ -6,7 +6,7 @@
 	var c = this;
 	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
 	c.isMobile = spUtil.isMobile();
-	
+
 	c.data.headers = {
 		"Authorization": "Bearer abc123xyz",
 		"Content-Type": "application/json",
@@ -126,6 +126,23 @@
 			spUtil.addErrorMessage("Nothing to copy");
 		}
 	}
+
+	c.openJCModal = function (respObj) {
+		spModal.confirm("Response Body will be sent to external site to render graphical view.<br>Do you want to proceed?").then(function(confirmed) {
+			if(confirmed) {
+				spModal.open({
+					title: 'Diagram View',
+					widget: 'json_crack',
+					widgetInput: {'obj' : respObj},
+					size: 'lg',
+					buttons: [{label:'${Ok}', primary: true}]
+				}).then(function (answer) {
+
+				});
+			}
+		});
+	}
+
 };]]></client_script>
         <controller_as>c</controller_as>
         <css>*:not(.glyphicon) {
@@ -134,6 +151,14 @@
 
 .btn[disabled] {
   opacity: 1;
+}
+
+.btn-pnl &gt; a {
+  color: inherit;
+}
+
+.glyphicon-stats {
+  margin-right: 10px;
 }
 
 .full-width {
@@ -267,6 +292,7 @@ input[type=checkbox] {
 .CodeMirror {
   border-radius: 0px 0px 5px 5px;
   border: none;
+  height: 160px;
 }
 
 pre.CodeMirror-line {
@@ -441,14 +467,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-05-30 16:20:56</sys_created_on>
         <sys_id>0cb5ee76974be51056e8b3e6f053afa4</sys_id>
-        <sys_mod_count>496</sys_mod_count>
+        <sys_mod_count>521</sys_mod_count>
         <sys_name>Mailman Widget</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_0cb5ee76974be51056e8b3e6f053afa4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-06-30 13:03:30</sys_updated_on>
+        <sys_updated_on>2023-07-06 12:55:29</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
@@ -493,11 +519,11 @@ pre.CodeMirror-line {
           <tbody>
             <tr ng-repeat="item in c.data.headersNew">
               <td width="30%" ng-class="{'bg-edit': item.editingKey}">
-                <span class="full-span" ng-if="!item.editingKey" ng-click="c.startEditing(item, 'key', $event)">{{item.key}}</span>
+                <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">{{item.key}}</span>
                 <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
               </td>
               <td width="50%" ng-class="{'bg-edit': item.editingValue}">
-                <span class="full-span" ng-if="!item.editingValue" ng-click="c.startEditing(item, 'value', $event)">{{item.value}}</span>
+                <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">{{item.value}}</span>
                 <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')"/>
               </td>
               <td width="20%" class="text-center vertical-middle">
@@ -511,7 +537,7 @@ pre.CodeMirror-line {
         <div class="row full-width">
           <div class="col-xs-4"><input type="text" ng-model="c.headerKey" placeholder="Key" class="form-control" aria-label="key" id="inputKey"/></div>
           <div class="col-xs-6"><input type="text" ng-model="c.headerValue" placeholder="Value" class="form-control" aria-label="value" id="inputValue"/></div>
-          <div class="col-xs-2"><button class="btn btn-primary" type="button" ng-click="c.addHeader()"><span class="glyphicon glyphicon-ok"></span></button></div>
+          <div class="col-xs-2 text-center"><button class="btn btn-primary" type="button" ng-click="c.addHeader()"><span class="glyphicon glyphicon-ok"></span></button></div>
         </div>
       </div>
     </div>
@@ -539,7 +565,11 @@ pre.CodeMirror-line {
         <div class="panel-heading">
           <h3 class="panel-title">
             Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span>
-            <a ng-click="c.copy(c.data.script.value)" class="pull-right" role="button"><span class="glyphicon glyphicon-copy"></span></a>
+            <span class="btn-pnl pull-right">
+              <a ng-click="c.openJCModal(c.data.script.value)" ng-if="c.data.script.value != '' && c.data.script.value != '{}'" role="button"><span class="glyphicon glyphicon-stats"></span></a>
+              <a ng-click="c.copy(c.data.script.value)" role="button"><span class="glyphicon glyphicon-copy"></span></a>
+            </span>
+
           </h3>
         </div>
         <div class="panel-body no-padding">
