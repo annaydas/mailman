@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="db_image">
+    <db_image action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <category>Service Portal</category>
+        <format/>
+        <height/>
+        <image>067f990b9777211056e8b3e6f053aff6</image>
+        <name>x_792082_mailman.mailman-loading.svg</name>
+        <size_bytes>3381</size_bytes>
+        <sys_class_name>db_image</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-07-07 12:06:56</sys_created_on>
+        <sys_id>99e7514f97b3211056e8b3e6f053af35</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>x_792082_mailman.mailman-loading.svg</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>db_image_99e7514f97b3211056e8b3e6f053af35</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-07-07 12:39:43</sys_updated_on>
+        <thumbnail/>
+        <width/>
+    </db_image>
+    <sys_attachment action="INSERT_OR_UPDATE">
+        <average_image_color/>
+        <chunk_size_bytes>700000</chunk_size_bytes>
+        <compressed>true</compressed>
+        <content_type>image/svg+xml</content_type>
+        <encryption_context/>
+        <file_name>image</file_name>
+        <hash>ffeb63a1b7fbc16878a6f0cffc93b05018803f9458a9631e5e7bb2e5d1b0febd</hash>
+        <image_height/>
+        <image_width/>
+        <size_bytes>3381</size_bytes>
+        <size_compressed>517</size_compressed>
+        <state>available</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-07-07 12:39:42</sys_created_on>
+        <sys_id>067f990b9777211056e8b3e6f053aff6</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_updated_by>system</sys_updated_by>
+        <sys_updated_on>2023-07-07 12:39:43</sys_updated_on>
+        <table_name>ZZ_YYdb_image</table_name>
+        <table_sys_id>99e7514f97b3211056e8b3e6f053af35</table_sys_id>
+    </sys_attachment>
+    <sys_attachment_doc action="INSERT_OR_UPDATE">
+        <data>H4sIAAAAAAAAAA==</data>
+        <length>16</length>
+        <position>0</position>
+        <sys_attachment display_value="image" sys_id="067f990b9777211056e8b3e6f053aff6">067f990b9777211056e8b3e6f053aff6</sys_attachment>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-07-07 12:39:42</sys_created_on>
+        <sys_id>467f990b9777211056e8b3e6f053aff6</sys_id>
+    </sys_attachment_doc>
+    <sys_attachment_doc action="INSERT_OR_UPDATE">
+        <data>1VdLj9owEL7vr5h6z0kcHssjhFXb8/ZQ9bKqenDiIVgYO3IcAv++E2BXhfZQaC+O5Lw8nz3f5xlbs3jebzXs0DXKmpylMWeAprRSmSpnrV9FU/a8fFg0uwrI0jQ5W3tfz5Ok67q4G8bWVcmAc56QBTuZzPdamc2fDNPZbJYcexk0/qAxZ1vhKmXmIFpvMyhEuamcbY2cg7EGM5CqqbU4zKHQttxk0KxFjZFDI9GRj2cgg05Jv87ZIOX1nsEaVbX27587hd0nu88ZBw4pPzYGtcMG3Q4/NjWW/qvwyuZs/6LkKzVGpB39BkKNGByO97dJ+C8z0PtKaZ2zR87Hw1lJQICFMGorPILw3qmi9fhFbIltb0nuCN0iKfm4QllMhtkZ+fZksMHDN7XtTXjGYz4dXl5ZykC2jparYeCwRuE/k2bkjSJZVsoojwwKJGFpBLIphS5frCQHSM7SIXUvF8nZRyKa9EyX73wH06AJ/46/XYLxIGwJ0qer63YJJk9hSzAY3875lOl9/IfJeZb+p1UPV4Ir9B25fwqCfgcIU4Er+OjuIAhXgtFlHkzuDYJeiDAVmNyx+53P/XBJ//uhdz73w5VgfIm/P/kDluCvOT8sPkQRfNdS2R9QoUFHvRKKA/S1S0PFi7aiL4ViZROIIhqCypzlT849JUY1DQAA</data>
+        <length>676</length>
+        <position>1</position>
+        <sys_attachment display_value="image" sys_id="067f990b9777211056e8b3e6f053aff6">067f990b9777211056e8b3e6f053aff6</sys_attachment>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-07-07 12:39:42</sys_created_on>
+        <sys_id>c67f990b9777211056e8b3e6f053aff6</sys_id>
+    </sys_attachment_doc>
+</record_update>

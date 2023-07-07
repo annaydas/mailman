@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller=function(spUtil) {
+        <client_script><![CDATA[api.controller=function(spUtil, $scope) {
 	/* widget controller */
 	var c = this;
 
 	c.tabs = [];
+	c.loading = false;
+
+	$scope.$on('sp_loading_indicator', function(e, value) {
+		c.loading = value;
+	});
 
 	spUtil.get("mailman_widget").then(function(response) {
 		c.tabs.push({"id": c.tabs.length + 1, "widget": response, "active":true});
@@ -33,7 +38,25 @@
 
 };]]></client_script>
         <controller_as>c</controller_as>
-        <css>.padding-all-15 {
+        <css>*:not(.glyphicon) {
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.loadingOverlay {
+  position: fixed;
+  top:0px;
+  right:0px;
+  width:100%;
+  height:100%;
+  background-image: url('x_792082_mailman.mailman-loading.svg');
+  background-size: 100px;
+  background-repeat:no-repeat;
+  background-position:center;
+  z-index:10000000;
+  backdrop-filter: blur(2px) contrast(0.5);
+}
+
+.padding-all-15 {
   padding-top: 20px;
 }
 
@@ -51,6 +74,7 @@
 
 .font-large {
   font-size: 1.7rem;
+  color: $brand-primary;
 }
 
 li.mailman-tab &gt; a {
@@ -162,15 +186,20 @@ li.new-btn-tab &gt; a:active {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-06-02 06:47:31</sys_created_on>
         <sys_id>fd3f7f6b97c7211056e8b3e6f053af54</sys_id>
-        <sys_mod_count>283</sys_mod_count>
+        <sys_mod_count>311</sys_mod_count>
         <sys_name>Mailman Body</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_fd3f7f6b97c7211056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-07-01 14:20:12</sys_updated_on>
-        <template><![CDATA[<div class="container">
+        <sys_updated_on>2023-07-07 13:04:26</sys_updated_on>
+        <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
+<div ng-if="c.loading==true" id="mailman-loader-div" class="loadingOverlay"></div>
+<div class="container">
+
   <uib-tabset id="mailman-tabs" justified="true">
 
     <uib-tab class="mailman-tab" ng-repeat="tab in c.tabs track by $index" select="c.tabSelected()" active="tab.active">
