@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_dependency_js_include">
+    <m2m_sp_dependency_js_include action="DELETE">
+        <order>100</order>
+        <sp_dependency display_value="uiCodemirror">65af207397cb211056e8b3e6f053aff1</sp_dependency>
+        <sp_js_include display_value="uiCodemirror">72bf207397cb211056e8b3e6f053afeb</sp_js_include>
+        <sys_class_name>m2m_sp_dependency_js_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-06-02 10:21:11</sys_created_on>
+        <sys_id>7b1070b397cb211056e8b3e6f053af4e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>uiCodemirror.uiCodemirror</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>m2m_sp_dependency_js_include_7b1070b397cb211056e8b3e6f053af4e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-06-02 10:21:11</sys_updated_on>
+    </m2m_sp_dependency_js_include>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</application>
+        <file_path/>
+        <instance_id>137bbb49db5595180ae3ac44d49619de</instance_id>
+        <instance_name>dev131733</instance_name>
+        <name>m2m_sp_dependency_js_include_7b1070b397cb211056e8b3e6f053af4e</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_dependency_js_include"><m2m_sp_dependency_js_include action="INSERT_OR_UPDATE"><order>100</order><sp_dependency display_value="uiCodemirror">65af207397cb211056e8b3e6f053aff1</sp_dependency><sp_js_include display_value="uiCodemirror">72bf207397cb211056e8b3e6f053afeb</sp_js_include><sys_class_name>m2m_sp_dependency_js_include</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-06-02 10:21:11</sys_created_on><sys_id>7b1070b397cb211056e8b3e6f053af4e</sys_id><sys_mod_count>0</sys_mod_count><sys_name>uiCodemirror.uiCodemirror</sys_name><sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package><sys_policy/><sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope><sys_update_name>m2m_sp_dependency_js_include_7b1070b397cb211056e8b3e6f053af4e</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-06-02 10:21:11</sys_updated_on></m2m_sp_dependency_js_include></record_update>]]></payload>
+        <payload_hash>-851985415</payload_hash>
+        <record_name>uiCodemirror.uiCodemirror</record_name>
+        <reverted_from/>
+        <source>6cb32e76974be51056e8b3e6f053af7d</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-06-02 10:21:11</sys_created_on>
+        <sys_id>331070b397cb211056e8b3e6f053af51</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>1887ba021980000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-06-02 10:21:11</sys_updated_on>
+        <type>Dependency JS Includes</type>
+        <update_guid>771070b30ecb21105ae108bb69f0c450</update_guid>
+        <update_guid_history>771070b30ecb21105ae108bb69f0c450:-851985415</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete display_value="uiCodemirror.uiCodemirror">01780dcb9733211056e8b3e6f053af69</sys_audit_delete>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-07-07 10:59:09</sys_created_on>
+        <sys_db_object display_value="" name="m2m_sp_dependency_js_include">m2m_sp_dependency_js_include</sys_db_object>
+        <sys_id>58678c6828c14fa888776a9bb4d0ff01</sys_id>
+        <sys_metadata>7b1070b397cb211056e8b3e6f053af4e</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>uiCodemirror.uiCodemirror</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_scope_delete display_value="">ddccbcd626c14b68b5524bfd43c1dd10</sys_scope_delete>
+        <sys_update_name>m2m_sp_dependency_js_include_7b1070b397cb211056e8b3e6f053af4e</sys_update_name>
+        <sys_update_version display_value="m2m_sp_dependency_js_include_7b1070b397cb211056e8b3e6f053af4e">331070b397cb211056e8b3e6f053af51</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-07-07 10:59:09</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>
