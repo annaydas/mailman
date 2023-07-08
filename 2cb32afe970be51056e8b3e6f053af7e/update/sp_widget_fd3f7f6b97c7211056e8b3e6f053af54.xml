@@ -13,18 +13,18 @@
 	});
 
 	spUtil.get("mailman_widget").then(function(response) {
-		c.tabs.push({"id": c.tabs.length + 1, "widget": response, "active":true});
+		c.tabs.push({"id": c.generateWidgetID() /*c.tabs.length + 1*/, "widget": response, "active":true});
 	});
 
 	c.closeTab = function (index) {
 		if(c.tabs.length > 1) {
-			c.tabs.splice(index, 1);
+			c.tabs.splice(index, 1);			
 		}
 	}
 
 	c.openTab = function(index) {
 		spUtil.get("mailman_widget").then(function(response) {
-			c.tabs.push({"id": c.tabs.length + 1, "widget": response, "active":true});
+			c.tabs.push({"id": c.generateWidgetID() /*c.tabs.length + 1*/, "widget": response, "active":true});
 		});
 
 	}
@@ -33,6 +33,11 @@
 		$('div.CodeMirror:visible').each(function(i, el){
 			el.CodeMirror.refresh();
 		});
+	}
+	
+	c.generateWidgetID = function (){
+		return spUtil.createUid('xxxxxxxx');
+		//return Math.floor(Math.random()*90000000) + 10000000;
 	}
 
 
@@ -54,6 +59,12 @@
   background-position:center;
   z-index:10000000;
   backdrop-filter: blur(2px) contrast(0.5);
+  opacity: 1;
+  transition: opacity 0.2s ease-out;
+}
+
+.loadingOverlay.ng-hide {
+  opacity: 0;
 }
 
 .padding-all-15 {
@@ -186,23 +197,23 @@ li.new-btn-tab &gt; a:active {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-06-02 06:47:31</sys_created_on>
         <sys_id>fd3f7f6b97c7211056e8b3e6f053af54</sys_id>
-        <sys_mod_count>311</sys_mod_count>
+        <sys_mod_count>335</sys_mod_count>
         <sys_name>Mailman Body</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_fd3f7f6b97c7211056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-07-07 13:04:26</sys_updated_on>
+        <sys_updated_on>2023-07-08 17:37:57</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
-<div ng-if="c.loading==true" id="mailman-loader-div" class="loadingOverlay"></div>
+<div ng-show="c.loading==true" ng-hide="c.loading!=true" id="mailman-loader-div" class="loadingOverlay"></div>
 <div class="container">
 
   <uib-tabset id="mailman-tabs" justified="true">
 
-    <uib-tab class="mailman-tab" ng-repeat="tab in c.tabs track by $index" select="c.tabSelected()" active="tab.active">
+    <uib-tab class="mailman-tab" ng-repeat="tab in c.tabs track by tab.id" select="c.tabSelected()" active="tab.active">
 
       <uib-tab-heading class="font-large">
         Tab {{$index + 1}}

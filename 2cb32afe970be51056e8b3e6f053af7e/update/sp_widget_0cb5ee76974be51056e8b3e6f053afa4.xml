@@ -106,15 +106,15 @@
 	c.removeHeader = function (item, index) {
 		//Find the record using Index from Array.
 
-		spModal.confirm("Do you want to delete: " + item.key + " ?").then(function(confirmed) {
-			if(confirmed) {
-				//c.headerKey = key;
-				//c.headerValue = c.data.headers[key];
+		//spModal.confirm("Do you want to delete: " + item.key + " ?").then(function(confirmed) {
+		//	if(confirmed) {
+		//c.headerKey = key;
+		//c.headerValue = c.data.headers[key];
 
-				//Remove the item from Array using Index.
-				c.data.headersNew.splice(index, 1);
-			}
-		});
+		//Remove the item from Array using Index.
+		c.data.headersNew.splice(index, 1);
+		//	}
+		//});
 	}
 
 	c.copy = function (str) {
@@ -467,14 +467,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-05-30 16:20:56</sys_created_on>
         <sys_id>0cb5ee76974be51056e8b3e6f053afa4</sys_id>
-        <sys_mod_count>521</sys_mod_count>
+        <sys_mod_count>522</sys_mod_count>
         <sys_name>Mailman Widget</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_0cb5ee76974be51056e8b3e6f053afa4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-07-06 12:55:29</sys_updated_on>
+        <sys_updated_on>2023-07-07 16:43:01</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
