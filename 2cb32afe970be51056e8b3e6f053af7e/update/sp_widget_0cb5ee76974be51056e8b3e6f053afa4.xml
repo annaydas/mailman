@@ -7,18 +7,7 @@
 	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
 	c.isMobile = spUtil.isMobile();
 
-	c.data.headers = {
-		"Authorization": "Bearer abc123xyz",
-		"Content-Type": "application/json",
-		"Accept": "application/json"
-	};
-
 	c.data.headersNew = [{
-		"key" : "Authorization",
-		"value" : "Bearer abc123xyz",
-		"editingKey" : false,
-		"editingValue" : false
-	}, {
 		"key" : "Content-Type",
 		"value" : "application/json",
 		"editingKey" : false,
@@ -54,16 +43,33 @@
 
 	c.submit = function () {
 
-		var headersObj = {};
-		c.data.headersNew.forEach(function(header) {
-			headersObj[header.key] = header.value;
-		});
-
 		if(c.data.endpointUrl) {
+			var endpointUrl = c.data.endpointUrl;
+			var headersObj = {};
+			c.data.headersNew.forEach(function(header) {
+				headersObj[header.key] = header.value;
+			});
+
+			if (c.authType == 'basic') {
+				headersObj.Authorization = 'Basic ' + btoa(c.username + ':' + c.password);
+			} else if (c.authType == 'bearer') {
+				headersObj.Authorization = 'Bearer ' + c.token;
+			} else if (c.authType == 'apikey-header') {
+				headersObj[c.keyName] = c.keyValue;
+			} else if (c.authType == 'apikey-queryparams') {
+				var urlObj = new URL(endpointUrl);
+				urlObj.searchParams.append(c.keyName, c.keyValue);			
+				endpointUrl = urlObj.href;
+			} else if (c.authType == 'none') {
+				//do nothing
+			}
+
+
+
 			c.server.get({
 				action: 'sendMessage',
 				method: c.data.methodName,
-				endpoint: c.data.endpointUrl,
+				endpoint: endpointUrl,
 				headers: headersObj,
 				body: c.data.requestBody.value
 			}).then(function (resp) {
@@ -210,7 +216,8 @@ textarea {
 
 /* Small devices (tablets, 768px and up) */
 @media (max-width: 991px) {
-  #request-body, #response-text {
+  #request-body, #response-text,
+  #reqHeader-panel, #auth-panel {
     padding-left: 0;
     padding-right: 0;
   }
@@ -218,13 +225,34 @@ textarea {
 
 /* Medium devices (desktops, 992px and up) */
 @media (min-width: 992px) {
-  #request-body {
+  #request-body, #auth-panel {
     padding-left: 0;
   }
 
-  #response-text {
+  #response-text, #reqHeader-panel {
     padding-right: 0;
   }
+
+  #reqHeader-panel &gt; .panel &gt; .panel-body {
+    height: 200px;
+    overflow-y: auto;
+  }
+
+  #auth-panel &gt; .panel &gt; .panel-body {
+    height: 255px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #no-auth-group {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
 }
 
 .no-padding {
@@ -258,7 +286,6 @@ td
   box-shadow: none;
 }
 
-
 .iframe-preview {
   width: 100%;
   height: 100%;
@@ -269,6 +296,31 @@ td
 .footer-height {
   height: 20px;
 }
+
+
+/* Scrollbar CSS */
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $brand-primary;
+  border-radius: 5px; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: lighten($brand-primary, 10%);  
+}
+
 
 /* above each code section */
 .minibar {
@@ -467,14 +519,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-05-30 16:20:56</sys_created_on>
         <sys_id>0cb5ee76974be51056e8b3e6f053afa4</sys_id>
-        <sys_mod_count>522</sys_mod_count>
+        <sys_mod_count>548</sys_mod_count>
         <sys_name>Mailman Widget</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_0cb5ee76974be51056e8b3e6f053afa4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-07-07 16:43:01</sys_updated_on>
+        <sys_updated_on>2023-07-10 22:17:37</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
@@ -503,44 +555,101 @@ pre.CodeMirror-line {
   </div>
 
   <div class="row" id="headers">
-    <div class="panel panel-primary">
-      <div class="panel-heading">
-        <h3 class="panel-title">Request Headers</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table no-bottom-margin" width="100%">
-          <thead>
-            <tr>
-              <th width="30%">Key</th>
-              <th width="50%">Value</th>
-              <th width="20%" class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="item in c.data.headersNew">
-              <td width="30%" ng-class="{'bg-edit': item.editingKey}">
-                <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">{{item.key}}</span>
-                <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
-              </td>
-              <td width="50%" ng-class="{'bg-edit': item.editingValue}">
-                <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">{{item.value}}</span>
-                <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')"/>
-              </td>
-              <td width="20%" class="text-center vertical-middle">
-                <a role="button" ng-click="c.removeHeader(item, $index)"><span class="glyphicon glyphicon-trash"></span></a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="panel-footer">
-        <div class="row full-width">
-          <div class="col-xs-4"><input type="text" ng-model="c.headerKey" placeholder="Key" class="form-control" aria-label="key" id="inputKey"/></div>
-          <div class="col-xs-6"><input type="text" ng-model="c.headerValue" placeholder="Value" class="form-control" aria-label="value" id="inputValue"/></div>
-          <div class="col-xs-2 text-center"><button class="btn btn-primary" type="button" ng-click="c.addHeader()"><span class="glyphicon glyphicon-ok"></span></button></div>
+
+    <div class="col-md-6 col-sm-12 col-xs-12" id="auth-panel">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h3 class="panel-title">Authorization</h3>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="authType">Type</label>
+            <select class="form-control" id="authType" ng-init="c.authType='none'" ng-model="c.authType">
+              <option value="none">No Auth</option>
+              <option value="basic">Basic Auth</option>
+              <option value="bearer">Bearer</option>
+              <option value="apikey-header">API Key (in Header)</option>
+              <option value="apikey-queryparams">API Key (in Query Params)</option>
+            </select>
+          </div>
+
+          <div id="no-auth-group" class="text-center" ng-if="c.authType=='none'">
+            ${No authorization required.}
+          </div>
+
+          <div id="basic-auth-group" ng-if="c.authType=='basic'">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" class="form-control" id="username" ng-model="c.username">
+            </div>
+            <div class="form-group">
+              <label for="pwd">Password</label>
+              <input type="text" class="form-control" id="pwd" ng-model="c.password">
+            </div>
+          </div>
+
+          <div id="bearer-auth-group" ng-if="c.authType=='bearer'">
+            <div class="form-group">
+              <label for="token">Token</label>
+              <input type="text" class="form-control" id="token" ng-model="c.token">
+            </div>
+          </div>
+
+          <div id="apikey-auth-group" ng-if="c.authType=='apikey-header' || c.authType=='apikey-queryparams'">
+            <div class="form-group">
+              <label for="keyName">Key</label>
+              <input type="text" class="form-control" id="keyName" ng-model="c.keyName">
+            </div>
+            <div class="form-group">
+              <label for="keyValue">Value</label>
+              <input type="text" class="form-control" id="keyValue" ng-model="c.keyValue">
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <div class="col-md-6 col-sm-12 col-xs-12 no-left-right-padding" id="reqHeader-panel">    
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h3 class="panel-title">Request Headers</h3>
+        </div>
+        <div class="panel-body">
+          <table class="table no-bottom-margin" width="100%">
+            <thead>
+              <tr>
+                <th width="30%">Key</th>
+                <th width="50%">Value</th>
+                <th width="20%" class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="item in c.data.headersNew">
+                <td width="30%" ng-class="{'bg-edit': item.editingKey}">
+                  <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">{{item.key}}</span>
+                  <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
+                </td>
+                <td width="50%" ng-class="{'bg-edit': item.editingValue}">
+                  <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">{{item.value}}</span>
+                  <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')"/>
+                </td>
+                <td width="20%" class="text-center vertical-middle">
+                  <a role="button" ng-click="c.removeHeader(item, $index)"><span class="glyphicon glyphicon-trash"></span></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel-footer">
+          <div class="row full-width">
+            <div class="col-xs-4"><input type="text" ng-model="c.headerKey" placeholder="Key" class="form-control" aria-label="key" id="inputKey"/></div>
+            <div class="col-xs-6"><input type="text" ng-model="c.headerValue" placeholder="Value" class="form-control" aria-label="value" id="inputValue"/></div>
+            <div class="col-xs-2 text-center"><button class="btn btn-primary" type="button" ng-click="c.addHeader()"><span class="glyphicon glyphicon-ok"></span></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="row">
