@@ -8,6 +8,9 @@
 	c.isMobile = spUtil.isMobile();
 	c.showPassword = false;
 	c.passInputType = 'password';
+	c.copyMsg = '';
+	c.popoverOpenReq = false;
+	c.popoverOpenResp = false;
 
 	c.data.headersNew = [{
 		"key" : "Content-Type",
@@ -25,7 +28,7 @@
 		c.showPassword = !c.showPassword;
 		c.passInputType = (c.showPassword) ? 'text' : 'password';
 	}
-	
+
 	c.startEditing = function(item, elem, event) {
 
 		if(elem == 'key')
@@ -83,6 +86,7 @@
 				c.data.script.value = resp.data.responseBody;
 				c.data.statusFlag = resp.data.statusFlag;
 				c.data.httpStatus = resp.data.httpStatus;
+				spUtil.scrollTo('#response-text', 1000);
 			});
 		}
 	}
@@ -130,13 +134,32 @@
 		//});
 	}
 
-	c.copy = function (str) {
+	c.copy = function (str, source) {
 		if(str) {
 			navigator.clipboard.writeText(str).then(function (resp) {
-				spUtil.addTrivialMessage("Code copied to clipboard");
-			});	
+				$timeout(function () {
+					c.copyMsg = 'Copied to clipboard!';
+					c.setPopoverFlag(source, true);
+					$timeout(function () {
+						c.setPopoverFlag(source, false);
+					}, 3000);
+				});
+			})
 		} else {
-			spUtil.addErrorMessage("Nothing to copy");
+			c.copyMsg = 'Nothing to copy!';
+			c.setPopoverFlag(source, true);
+
+			$timeout(function () {
+				c.setPopoverFlag(source, false);
+			}, 3000);
+		}
+	}
+
+	c.setPopoverFlag = function (source, flag) {
+		if (source == 'req') {
+			c.popoverOpenReq = flag;
+		}	else if (source == 'resp') {
+			c.popoverOpenResp = flag;
 		}
 	}
 
@@ -148,320 +171,338 @@
 					widget: 'json_crack',
 					widgetInput: {'obj' : respObj},
 					size: 'lg',
-					buttons: [{label:'${Ok}', primary: true}]
+					buttons: [{label:'${Ok}', primary: true}],
+					headerStyle: {'background': '#00539C',
+												'color' : 'white',
+												'border-top-left-radius': '5px',
+												'border-top-right-radius': '5px'}
 				}).then(function (answer) {
 
 				});
+
+				$timeout(function () {
+					angular.element('button.close.pull-right').remove();
+				}, 800);
 			}
 		});
+
+		$timeout(function () {
+			angular.element('button.close.pull-right').remove();
+		}, 100);
+
 	}
 
 };]]></client_script>
         <controller_as>c</controller_as>
-        <css>*:not(.glyphicon) {&#13;
-  font-family: 'Ubuntu Mono', monospace;&#13;
-}&#13;
-&#13;
-.btn[disabled] {&#13;
-  opacity: 1;&#13;
-}&#13;
-&#13;
-.btn-pnl &gt; a {&#13;
-  color: inherit;&#13;
-}&#13;
-&#13;
-.glyphicon-stats {&#13;
-  margin-right: 10px;&#13;
-}&#13;
-&#13;
-.full-width {&#13;
-  width: 100%;&#13;
-}&#13;
-&#13;
-.my-group .ig-elem1 {&#13;
-  width: 25%;&#13;
-  background-color: $brand-primary;&#13;
-  color: white;&#13;
-}&#13;
-&#13;
-.vertical-middle {&#13;
-  vertical-align: middle;&#13;
-}&#13;
-&#13;
-.no-bottom-margin {&#13;
-  margin-bottom: 0px;&#13;
-}&#13;
-&#13;
-.my-group .ig-elem2 {&#13;
-  width: 75%;&#13;
-}&#13;
-&#13;
-.no-left-right-padding {&#13;
-  padding-left: 0;&#13;
-  padding-right: 0;&#13;
-}&#13;
-&#13;
-.panel-title {&#13;
-  font-weight: bold;&#13;
-  font-size: 1.7rem;&#13;
-}&#13;
-&#13;
-.bg-edit {&#13;
-  background: #FFF4A3;&#13;
-}&#13;
-&#13;
-textarea {&#13;
-  height: 161px;&#13;
-  width: 100%;&#13;
-  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */&#13;
-  -moz-box-sizing: border-box;    /* Firefox, other Gecko */&#13;
-  box-sizing: border-box;         /* Opera/IE 8+ */&#13;
-  border: none;&#13;
-  resize: none;&#13;
-}&#13;
-&#13;
-&#13;
-/* Small devices (tablets, 768px and up) */&#13;
-@media (max-width: 991px) {&#13;
-  #request-body, #response-text,&#13;
-  #reqHeader-panel, #auth-panel {&#13;
-    padding-left: 0;&#13;
-    padding-right: 0;&#13;
-  }&#13;
-}&#13;
-&#13;
-/* Medium devices (desktops, 992px and up) */&#13;
-@media (min-width: 992px) {&#13;
-  #request-body, #auth-panel {&#13;
-    padding-left: 0;&#13;
-  }&#13;
-&#13;
-  #response-text, #reqHeader-panel {&#13;
-    padding-right: 0;&#13;
-  }&#13;
-&#13;
-  #reqHeader-panel &gt; .panel &gt; .panel-body {&#13;
-    height: 200px;&#13;
-    overflow-y: auto;&#13;
-  }&#13;
-&#13;
-  #auth-panel &gt; .panel &gt; .panel-body {&#13;
-    height: 255px;&#13;
-    overflow-y: auto;&#13;
-    display: flex;&#13;
-    flex-direction: column;&#13;
-  }&#13;
-&#13;
-  #no-auth-group {&#13;
-    height: 100%;&#13;
-    display: flex;&#13;
-    flex-direction: row;&#13;
-    align-items: center;&#13;
-    justify-content: center;&#13;
-  }&#13;
-&#13;
-}&#13;
-&#13;
-.no-padding {&#13;
-  padding: 0;&#13;
-}&#13;
-&#13;
-.glyphicon-trash {&#13;
-  color: red;&#13;
-}&#13;
-&#13;
-td&#13;
-{&#13;
-  max-width: 100px;&#13;
-  overflow: hidden;&#13;
-  text-overflow: ellipsis;&#13;
-  white-space: normal;&#13;
-  overflow-wrap: break-word;&#13;
-}&#13;
-&#13;
-.full-span {&#13;
-  display: block;&#13;
-}&#13;
-&#13;
-.editable-input {&#13;
-  width: 100%;&#13;
-  border: none;&#13;
-  background: #FFF4A3;&#13;
-}&#13;
-&#13;
-.editable-input:focus {&#13;
-  box-shadow: none;&#13;
-}&#13;
-&#13;
-.iframe-preview {&#13;
-  width: 100%;&#13;
-  height: 100%;&#13;
-  padding-top: 5px;&#13;
-  border: none;&#13;
-}&#13;
-&#13;
-.footer-height {&#13;
-  height: 20px;&#13;
-}&#13;
-&#13;
-&#13;
-/* Scrollbar CSS */&#13;
-/* width */&#13;
-::-webkit-scrollbar {&#13;
-  width: 8px;&#13;
-&#13;
-}&#13;
-&#13;
-/* Track */&#13;
-::-webkit-scrollbar-track {&#13;
-  background: #f1f1f1;&#13;
-}&#13;
-&#13;
-/* Handle */&#13;
-::-webkit-scrollbar-thumb {&#13;
-  background: $brand-primary;&#13;
-  border-radius: 5px; &#13;
-}&#13;
-&#13;
-/* Handle on hover */&#13;
-::-webkit-scrollbar-thumb:hover {&#13;
-  background: lighten($brand-primary, 10%);  &#13;
-}&#13;
-&#13;
-&#13;
-/* above each code section */&#13;
-.minibar {&#13;
-  padding: 2px;&#13;
-&#13;
-  .btn {&#13;
-    border: none;&#13;
-  }&#13;
-}&#13;
-&#13;
-input[type=checkbox] {&#13;
-  margin-right: .25em;&#13;
-}&#13;
-&#13;
-.check {&#13;
-  white-space: nowrap;&#13;
-  margin-bottom: 0;&#13;
-  margin-left: 1rem;&#13;
-}&#13;
-&#13;
-.CodeMirror {&#13;
-  border-radius: 0px 0px 5px 5px;&#13;
-  border: none;&#13;
-  height: 160px;&#13;
-}&#13;
-&#13;
-.CodeMirror-hscrollbar {&#13;
-  height: 8px;&#13;
-}&#13;
-&#13;
-pre.CodeMirror-line {&#13;
-  font-size: 14px !important;&#13;
-}&#13;
-&#13;
-.animate {&#13;
-  transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);&#13;
-  -webkit-transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);&#13;
-}&#13;
-&#13;
-&#13;
-.relative {&#13;
-  position: relative;&#13;
-}&#13;
-&#13;
-.button-nav {&#13;
-  .btn-group {&#13;
-    margin-left: 0.5rem;&#13;
-  }&#13;
-&#13;
-  button {&#13;
-    min-width: 40px;&#13;
-  }&#13;
-}&#13;
-&#13;
-.doc {&#13;
-  overflow: auto;&#13;
-  width: 98%;&#13;
-}&#13;
-&#13;
-.doc-icons {&#13;
-  position: absolute;&#13;
-  padding: 5px;&#13;
-  right: 0px;&#13;
-}&#13;
-&#13;
-.dropdown-icon {&#13;
-  padding-right: 10px;&#13;
-}&#13;
-&#13;
-.sp-dep {&#13;
-  width: 200px;&#13;
-}&#13;
-&#13;
-.read-only-message {&#13;
-  text-align: center;&#13;
-&#13;
-  .alert {&#13;
-    display: inline-block;&#13;
-    margin-bottom: 10px;&#13;
-  }&#13;
-&#13;
-}&#13;
-&#13;
-.cm-s-snc_readonly { background-color: #e6e8ea; color: #444444; }&#13;
-&#13;
-.cm-s-snc_readonly_readonly span.cm-meta { color: #FF1717; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-keyword { font-weight: bold; color: #7F0055; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-atom { color: #219; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-number { color: #164; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-def { color: #00f; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-variable { color: black; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-variable-2 { color: #0000C0; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-variable-3 { color: #0000C0; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-property { color: black; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-operator { color: black; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-comment { color: #3F7F5F; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-string { color: #2A00FF; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-string-2 { color: #f50; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-error { color: #f00; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-qualifier { color: #555; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-builtin { color: #30a; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-bracket { color: #cc7; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-tag { color: #170; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-attribute { color: #00c; }&#13;
-&#13;
-.cm-s-snc_readonly span.cm-link { color: #219; }&#13;
-&#13;
-.cm-s-snc_readonly .CodeMirror-matchingbracket {&#13;
-  color: OrangeRed !important;;&#13;
-}&#13;
-&#13;
-// readonly&#13;
-[role="editor-container"][data-readonly="true"] {&#13;
-  .CodeMirror {&#13;
-    background-color: #F7F7F7 !important;&#13;
-  }&#13;
+        <css>*:not(.glyphicon) {
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.btn[disabled] {
+  opacity: 1;
+}
+
+.btn-pnl &gt; a {
+  color: inherit;
+}
+
+.glyphicon-stats {
+  margin-right: 10px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.my-group .ig-elem1 {
+  width: 25%;
+  background-color: $brand-primary;
+  color: white;
+}
+
+.vertical-middle {
+  vertical-align: middle;
+}
+
+.no-bottom-margin {
+  margin-bottom: 0px;
+}
+
+.my-group .ig-elem2 {
+  width: 75%;
+}
+
+.no-left-right-padding {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.panel-title {
+  font-weight: bold;
+  font-size: 1.7rem;
+}
+
+.bg-edit {
+  background: #FFF4A3;
+}
+
+textarea {
+  height: 161px;
+  width: 100%;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+  border: none;
+  resize: none;
+}
+
+.pop-class {
+  background: white;
+  color: $brand-primary;
+}
+
+
+/* Small devices (tablets, 768px and up) */
+@media (max-width: 991px) {
+  #request-body, #response-text,
+  #reqHeader-panel, #auth-panel {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Medium devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  #request-body, #auth-panel {
+    padding-left: 0;
+  }
+
+  #response-text, #reqHeader-panel {
+    padding-right: 0;
+  }
+
+  #reqHeader-panel &gt; .panel &gt; .panel-body {
+    height: 200px;
+    overflow-y: auto;
+  }
+
+  #auth-panel &gt; .panel &gt; .panel-body {
+    height: 255px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #no-auth-group {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+}
+
+.no-padding {
+  padding: 0;
+}
+
+.glyphicon-trash {
+  color: red;
+}
+
+td
+{
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.full-span {
+  display: block;
+}
+
+.editable-input {
+  width: 100%;
+  border: none;
+  background: #FFF4A3;
+}
+
+.editable-input:focus {
+  box-shadow: none;
+}
+
+.iframe-preview {
+  width: 100%;
+  height: 100%;
+  padding-top: 5px;
+  border: none;
+}
+
+.footer-height {
+  height: 20px;
+}
+
+
+/* Scrollbar CSS */
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $brand-primary;
+  border-radius: 5px; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: lighten($brand-primary, 10%);  
+}
+
+
+/* above each code section */
+.minibar {
+  padding: 2px;
+
+  .btn {
+    border: none;
+  }
+}
+
+input[type=checkbox] {
+  margin-right: .25em;
+}
+
+.check {
+  white-space: nowrap;
+  margin-bottom: 0;
+  margin-left: 1rem;
+}
+
+.CodeMirror {
+  border-radius: 0px 0px 5px 5px;
+  border: none;
+  height: 160px;
+}
+
+.CodeMirror-hscrollbar {
+  height: 8px;
+}
+
+pre.CodeMirror-line {
+  font-size: 14px !important;
+}
+
+.animate {
+  transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+  -webkit-transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+}
+
+
+.relative {
+  position: relative;
+}
+
+.button-nav {
+  .btn-group {
+    margin-left: 0.5rem;
+  }
+
+  button {
+    min-width: 40px;
+  }
+}
+
+.doc {
+  overflow: auto;
+  width: 98%;
+}
+
+.doc-icons {
+  position: absolute;
+  padding: 5px;
+  right: 0px;
+}
+
+.dropdown-icon {
+  padding-right: 10px;
+}
+
+.sp-dep {
+  width: 200px;
+}
+
+.read-only-message {
+  text-align: center;
+
+  .alert {
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+
+}
+
+.cm-s-snc_readonly { background-color: #e6e8ea; color: #444444; }
+
+.cm-s-snc_readonly_readonly span.cm-meta { color: #FF1717; }
+
+.cm-s-snc_readonly span.cm-keyword { font-weight: bold; color: #7F0055; }
+
+.cm-s-snc_readonly span.cm-atom { color: #219; }
+
+.cm-s-snc_readonly span.cm-number { color: #164; }
+
+.cm-s-snc_readonly span.cm-def { color: #00f; }
+
+.cm-s-snc_readonly span.cm-variable { color: black; }
+
+.cm-s-snc_readonly span.cm-variable-2 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-variable-3 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-property { color: black; }
+
+.cm-s-snc_readonly span.cm-operator { color: black; }
+
+.cm-s-snc_readonly span.cm-comment { color: #3F7F5F; }
+
+.cm-s-snc_readonly span.cm-string { color: #2A00FF; }
+
+.cm-s-snc_readonly span.cm-string-2 { color: #f50; }
+
+.cm-s-snc_readonly span.cm-error { color: #f00; }
+
+.cm-s-snc_readonly span.cm-qualifier { color: #555; }
+
+.cm-s-snc_readonly span.cm-builtin { color: #30a; }
+
+.cm-s-snc_readonly span.cm-bracket { color: #cc7; }
+
+.cm-s-snc_readonly span.cm-tag { color: #170; }
+
+.cm-s-snc_readonly span.cm-attribute { color: #00c; }
+
+.cm-s-snc_readonly span.cm-link { color: #219; }
+
+.cm-s-snc_readonly .CodeMirror-matchingbracket {
+  color: OrangeRed !important;;
+}
+
+// readonly
+[role="editor-container"][data-readonly="true"] {
+  .CodeMirror {
+    background-color: #F7F7F7 !important;
+  }
 }</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
@@ -530,14 +571,14 @@ pre.CodeMirror-line {&#13;
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-05-30 16:20:56</sys_created_on>
         <sys_id>0cb5ee76974be51056e8b3e6f053afa4</sys_id>
-        <sys_mod_count>561</sys_mod_count>
+        <sys_mod_count>647</sys_mod_count>
         <sys_name>Mailman Widget</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_0cb5ee76974be51056e8b3e6f053afa4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-07-11 13:15:50</sys_updated_on>
+        <sys_updated_on>2023-07-12 07:01:11</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
@@ -692,7 +733,7 @@ pre.CodeMirror-line {&#13;
         <div class="panel-heading">
           <h3 class="panel-title">
             Request Body
-            <a ng-click="c.copy(c.data.requestBody.value)" class="pull-right" role="button"><span class="glyphicon glyphicon-copy"></span></a>
+            <a popover-animation="true" uib-popover="{{c.copyMsg}}" popover-class="pop-class" popover-is-open="c.popoverOpenReq" popover-placement="top-right" ng-click="c.copy(c.data.requestBody.value, 'req')" class="pull-right" role="button"><span class="glyphicon glyphicon-copy"></span></a>
           </h3>
         </div>
         <div class="panel-body no-padding">
@@ -709,7 +750,7 @@ pre.CodeMirror-line {&#13;
             Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span>
             <span class="btn-pnl pull-right">
               <a ng-click="c.openJCModal(c.data.script.value)" ng-if="c.data.script.value != '' && c.data.script.value != '{}'" role="button"><span class="glyphicon glyphicon-stats"></span></a>
-              <a ng-click="c.copy(c.data.script.value)" role="button"><span class="glyphicon glyphicon-copy"></span></a>
+              <a popover-animation="true" uib-popover="{{c.copyMsg}}" popover-class="pop-class" popover-is-open="c.popoverOpenResp" popover-placement="top-right" ng-click="c.copy(c.data.script.value, 'resp')" role="button"><span class="glyphicon glyphicon-copy"></span></a>
             </span>
 
           </h3>
