@@ -1,45 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller=function(spUtil, $scope) {
-	/* widget controller */
-	var c = this;
+        <client_script><![CDATA[api.controller = function(spUtil, $scope) {
+    /* widget controller */
+    var c = this;
 
-	c.tabs = [];
-	c.loading = false;
+    c.tabs = [];
+    c.loading = false;
 
-	$scope.$on('sp_loading_indicator', function(e, value) {
-		c.loading = value;
-	});
+    $scope.$on('sp_loading_indicator', function(e, value) {
+        c.loading = value;
+    });
 
-	spUtil.get("mailman_widget").then(function(response) {
-		c.tabs.push({"id": c.generateWidgetID() /*c.tabs.length + 1*/, "widget": response, "active":true});
-	});
+    var storedRequests = localStorage.getItem('mailmanSavedRequests');
+    if (storedRequests == null || storedRequests == '[]') {
+        spUtil.get("mailman_widget").then(function(response) {
+            c.tabs.push({
+                "id": c.generateWidgetID() /*c.tabs.length + 1*/ ,
+                "widget": response,
+                "active": true
+            });
+        });
+    } else {
+        var storedArr = JSON.parse(storedRequests);
+        storedArr.forEach(function(item) {
+            spUtil.get("mailman_widget", {
+                preloadsaveddata: 'true',
+                methodname: item.methodName,
+                endpointurl: item.endpointUrl,
+                headersnew: item.headersNew,
+                requestbody: item.requestBody,
+                responsebody: item.responseBody,
+                statusflag: item.statusFlag,
+                httpstatus: item.httpStatus
+            }).then(function(response) {
+                c.tabs.push({
+                    "id": item.widgetID, //c.generateWidgetID() /*c.tabs.length + 1*/ ,
+                    "widget": response,
+                    "active": true
+                });
+            });
+        });
+    }
 
-	c.closeTab = function (index) {
-		if(c.tabs.length > 1) {
-			c.tabs.splice(index, 1);			
-		}
-	}
+    c.closeTab = function(index) {
+        if (c.tabs.length > 1) {
+            var closedWidID = c.tabs[index].id;
+            var storageArr = JSON.parse(localStorage.getItem('mailmanSavedRequests'));
+            var filteredStorageArr = storageArr.filter(function(item) {
+                return item.widgetID !== closedWidID;
+            });
+            localStorage.setItem('mailmanSavedRequests', JSON.stringify(filteredStorageArr));
 
-	c.openTab = function(index) {
-		spUtil.get("mailman_widget").then(function(response) {
-			c.tabs.push({"id": c.generateWidgetID() /*c.tabs.length + 1*/, "widget": response, "active":true});
-		});
+            c.tabs.splice(index, 1);
+        }
 
-	}
+    };
 
-	c.tabSelected = function() {
-		$('div.CodeMirror:visible').each(function(i, el){
-			el.CodeMirror.refresh();
-		});
-	}
-	
-	c.generateWidgetID = function (){
-		return spUtil.createUid('xxxxxxxx');
-		//return Math.floor(Math.random()*90000000) + 10000000;
-	}
+    c.saveTab = function(index) {
+        var data = c.tabs[index].widget.data;
+        data.widgetID = c.tabs[index].id;
+        var storageItem = localStorage.getItem('mailmanSavedRequests');
+        var storageArr = [];
 
+        if (storageItem == null) {
+            storageArr.push(data);
+            localStorage.setItem('mailmanSavedRequests', JSON.stringify(storageArr));
+        } else {
+            storageArr = JSON.parse(storageItem);
+
+            var indexFound = -1;
+            for (i = 0; i < storageArr.length; i++) {
+                if (storageArr[i].widgetID === data.widgetID) {
+                    indexFound = i;
+                    break;
+                }
+            }
+
+            if (indexFound !== -1) {
+                storageArr.splice(indexFound, 1, data);
+            } else {
+                storageArr.push(data);
+            }
+
+            localStorage.setItem('mailmanSavedRequests', JSON.stringify(storageArr));
+        }
+    };
+
+    c.openTab = function(index) {
+        spUtil.get("mailman_widget").then(function(response) {
+            c.tabs.push({
+                "id": c.generateWidgetID() /*c.tabs.length + 1*/ ,
+                "widget": response,
+                "active": true
+            });
+        });
+
+    };
+
+    c.tabSelected = function() {
+        $('div.CodeMirror:visible').each(function(i, el) {
+            el.CodeMirror.refresh();
+        });
+    };
+
+    c.generateWidgetID = function() {
+        return spUtil.createUid('xxxxxxxx');
+        //return Math.floor(Math.random()*90000000) + 10000000;
+    };
 
 };]]></client_script>
         <controller_as>c</controller_as>
@@ -91,7 +159,6 @@
 li.mailman-tab &gt; a {
   color: inherit;
 }
-
 
 .nav-tabs.nav-justified &gt; li &gt; a {
   border-bottom: 1px solid $brand-primary;
@@ -197,14 +264,14 @@ li.new-btn-tab &gt; a:active {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-06-02 06:47:31</sys_created_on>
         <sys_id>fd3f7f6b97c7211056e8b3e6f053af54</sys_id>
-        <sys_mod_count>335</sys_mod_count>
+        <sys_mod_count>411</sys_mod_count>
         <sys_name>Mailman Body</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_fd3f7f6b97c7211056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-07-08 17:37:57</sys_updated_on>
+        <sys_updated_on>2023-10-20 19:58:27</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
@@ -217,7 +284,10 @@ li.new-btn-tab &gt; a:active {
 
       <uib-tab-heading class="font-large">
         Tab {{$index + 1}}
-        <a class="" role="button" ng-click="c.closeTab($index)"><i class="pull-right font-red glyphicon glyphicon-remove"></i></a>
+        <span class="pull-right">
+          <a class="m-r-sm" role="button" ng-click="c.saveTab($index)"><i class="font-primary glyphicon glyphicon-floppy-disk"></i></a>
+          <a class="" role="button" ng-click="c.closeTab($index)"><i class="font-red glyphicon glyphicon-remove"></i></a>
+        </span>
       </uib-tab-heading>
 
       <div id="tab-body" class="padding-all-15">
