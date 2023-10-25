@@ -26,7 +26,7 @@ $text-muted:#979797;
         <enable_ais>false</enable_ais>
         <enable_favorites>false</enable_favorites>
         <hide_portal_name>false</hide_portal_name>
-        <homepage display_value="mailman">5844aa32974be51056e8b3e6f053af52</homepage>
+        <homepage display_value="mailman_new">c6b6a41997ce311056e8b3e6f053af2e</homepage>
         <icon/>
         <kb_knowledge_base/>
         <kb_knowledge_page/>
@@ -45,14 +45,14 @@ $text-muted:#979797;
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-06-30 06:12:45</sys_created_on>
         <sys_id>a48304f497bf211056e8b3e6f053af28</sys_id>
-        <sys_mod_count>33</sys_mod_count>
+        <sys_mod_count>34</sys_mod_count>
         <sys_name>Mailman</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_portal_a48304f497bf211056e8b3e6f053af28</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-10-25 06:45:22</sys_updated_on>
+        <sys_updated_on>2023-10-25 09:14:24</sys_updated_on>
         <theme display_value="Mailman Theme">bd4f977397ffe11056e8b3e6f053af54</theme>
         <title>Mailman</title>
         <ts_index_group/>
