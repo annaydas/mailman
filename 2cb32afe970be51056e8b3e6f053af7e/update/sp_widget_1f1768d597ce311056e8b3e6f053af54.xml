@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller = function(spUtil, $scope) {
+	/* widget controller */
+	var c = this;
+
+	c.tabs = [];
+	c.loading = false;
+
+	$scope.$on('sp_loading_indicator', function(e, value) {
+		c.loading = value;
+	});
+
+	var storedRequests = localStorage.getItem('mailmanSavedRequests');
+	if (storedRequests == null || storedRequests == '[]') {
+		spUtil.get("mailman_widget_new").then(function(response) {
+			c.tabs.push({
+				"id": c.generateWidgetID() /*c.tabs.length + 1*/ ,
+				"widget": response,
+				"active": true
+			});
+		});
+	} else {
+		var storedArr = JSON.parse(storedRequests);
+		storedArr.forEach(function(item) {
+			spUtil.get("mailman_widget_new", {
+				preloadsaveddata: 'true',
+				methodname: item.methodName,
+				endpointurl: item.endpointUrl,
+				headersnew: item.headersNew,
+				requestbody: item.requestBody,
+				responsebody: item.responseBody,
+				statusflag: item.statusFlag,
+				httpstatus: item.httpStatus
+			}).then(function(response) {
+				c.tabs.push({
+					"id": item.widgetID, //c.generateWidgetID() /*c.tabs.length + 1*/ ,
+					"widget": response,
+					"active": true
+				});
+			});
+		});
+	}
+
+	c.closeTab = function(index) {
+		if (c.tabs.length > 1) {
+			var closedWidID = c.tabs[index].id;
+			var storageArr = JSON.parse(localStorage.getItem('mailmanSavedRequests'));
+			var filteredStorageArr = storageArr.filter(function(item) {
+				return item.widgetID !== closedWidID;
+			});
+			localStorage.setItem('mailmanSavedRequests', JSON.stringify(filteredStorageArr));
+
+			c.tabs.splice(index, 1);
+		}
+
+	};
+
+	c.saveTab = function(index) {
+		var data = c.tabs[index].widget.data;
+		data.widgetID = c.tabs[index].id;
+		var storageItem = localStorage.getItem('mailmanSavedRequests');
+		var storageArr = [];
+
+		if (storageItem == null) {
+			storageArr.push(data);
+			localStorage.setItem('mailmanSavedRequests', JSON.stringify(storageArr));
+		} else {
+			storageArr = JSON.parse(storageItem);
+
+			var indexFound = -1;
+			for (i = 0; i < storageArr.length; i++) {
+				if (storageArr[i].widgetID === data.widgetID) {
+					indexFound = i;
+					break;
+				}
+			}
+
+			if (indexFound !== -1) {
+				storageArr.splice(indexFound, 1, data);
+			} else {
+				storageArr.push(data);
+			}
+
+			localStorage.setItem('mailmanSavedRequests', JSON.stringify(storageArr));
+		}
+	};
+
+	c.openTab = function() {
+		spUtil.get("mailman_widget_new").then(function(response) {
+			c.tabs.push({
+				"id": c.generateWidgetID() /*c.tabs.length + 1*/ ,
+				"widget": response,
+				"active": true
+			});
+		});
+
+	};
+
+	c.tabSelected = function() {
+		$('div.CodeMirror:visible').each(function(i, el) {
+			el.CodeMirror.refresh();
+		});
+	};
+
+	c.generateWidgetID = function() {
+		return spUtil.createUid('xxxxxxxx');
+		//return Math.floor(Math.random()*90000000) + 10000000;
+	};
+
+};]]></client_script>
+        <controller_as>c</controller_as>
+        <css>*:not(.glyphicon){
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+}
+
+.loadingOverlay {
+  position: fixed;
+  top:0px;
+  right:0px;
+  width:100%;
+  height:100%;
+  background-image: url('x_792082_mailman.mailman-loading.svg');
+  background-size: 100px;
+  background-repeat:no-repeat;
+  background-position:center;
+  z-index:10000000;
+  backdrop-filter: blur(2px) contrast(0.5);
+  opacity: 1;
+  transition: opacity 0.2s ease-out;
+}
+
+.loadingOverlay.ng-hide {
+  opacity: 0;
+}
+
+.padding-all-15 {
+  padding-top: 20px;
+}
+
+.font-red {
+  color: red !important;
+}
+
+.font-primary {
+  color: $brand-primary;
+}
+
+#new-req-btn {
+  position: fixed;
+  bottom: 40px;
+}
+
+md-ink-bar {
+  background: $brand-primary;
+}
+
+.font-gray {
+  color: gray;
+}
+
+.font-large {
+  font-size: 1.7rem;
+  color: $brand-primary;
+}
+
+.remove-shadow:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.mailman-tab-width{
+  min-width: 200px;
+}
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>mailman_body_new</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Mailman Body New</name>
+        <option_schema/>
+        <public>true</public>
+        <roles/>
+        <script><![CDATA[(function() {  /* populate the 'data' object */  /* e.g., data.table = $sp.getValue('table'); */})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-10-21 18:25:23</sys_created_on>
+        <sys_id>1f1768d597ce311056e8b3e6f053af54</sys_id>
+        <sys_mod_count>47</sys_mod_count>
+        <sys_name>Mailman Body New</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>sp_widget_1f1768d597ce311056e8b3e6f053af54</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-10-25 05:56:04</sys_updated_on>
+        <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
+<div ng-show="c.loading==true" ng-hide="c.loading!=true" id="mailman-loader-div" class="loadingOverlay"></div>
+
+<div class="">
+
+  <md-button id="new-req-btn" ng-click="c.openTab()" class="md-primary md-hue-3 md-raised md-fab md-fab-bottom-right" aria-label="Create New">
+    <md-icon>add</md-icon>
+  </md-button>
+
+  <md-tabs id="mailman-tabs" md-dynamic-height md-border-bottom md-swipe-content>
+
+    <md-tab md-tab-class="font-large mailman-tab-width remove-shadow" ng-repeat="tab in c.tabs track by tab.id" md-on-select="c.tabSelected()" md-active="tab.active">
+
+      <md-tab-label>
+        <md-content flex layout="row" style="gap: 10px; background: transparent;">
+          <span flex="80" md-truncate>Tab {{$index + 1}}</span>
+          <md-icon ng-click="c.saveTab($index)" class="md-primary" flex="10">save</md-icon>
+          <md-icon ng-click="c.closeTab($index)" class="font-red" flex="10">close</md-icon>
+        </md-content>
+      </md-tab-label>
+
+      <md-tab-body id="tab-body" class="padding-all-15">
+        <sp-widget widget="tab.widget"></sp-widget>
+      </md-tab-body>
+
+    </md-tab>
+
+  </md-tabs>
+
+</div>]]></template>
+    </sp_widget>
+</record_update>

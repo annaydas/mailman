@@ -1,0 +1,876 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller = function(spUtil, spModal, $timeout, $mdToast) {
+	/* widget controller */
+	var c = this;
+	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
+	c.isMobile = spUtil.isMobile();
+	c.showPassword = false;
+	c.passInputType = 'password';
+
+	c.openToast = function(msg, type) {
+		var colour = (type === 'success') ? '#00E676': '#F44336';
+		$mdToast.show({
+			template: '<md-toast style="padding: 30px;">' +
+				'<div class="md-toast-content" style="border-left: 5px solid '+ colour + ';">' +
+				msg +
+				'</div>' +
+			'</md-toast>',
+			position: 'top right'
+		});
+	};
+
+	c.showHidePassword = function() {
+		c.showPassword = !c.showPassword;
+		c.passInputType = (c.showPassword) ? 'text' : 'password';
+	};
+
+	c.startEditing = function(item, elem, event) {
+
+		if (elem == 'key')
+			item.editingKey = true;
+		else if (elem == 'value')
+			item.editingValue = true;
+
+		var element = angular.element(event.currentTarget);
+		var parentTD = angular.element(element).parent();
+		$timeout(function(elem123) {
+			//console.log(elem123.children()[0].focus());
+		}, 50, true, parentTD);
+
+	};
+
+	c.doneEditing = function(item, elem, $event) {
+		if (elem == 'key')
+			item.editingKey = false;
+		else if (elem == 'value')
+			item.editingValue = false;
+	};
+
+	c.submit = function() {
+
+		if (c.data.endpointUrl) {
+			var endpointUrl = c.data.endpointUrl;
+			var headersObj = {};
+			c.data.headersNew.forEach(function(header) {
+				headersObj[header.key] = header.value;
+			});
+
+			if (c.authType == 'basic') {
+				headersObj.Authorization = 'Basic ' + btoa(c.username + ':' + c.password);
+			} else if (c.authType == 'bearer') {
+				headersObj.Authorization = 'Bearer ' + c.token;
+			} else if (c.authType == 'apikey-header') {
+				headersObj[c.keyName] = c.keyValue;
+			} else if (c.authType == 'apikey-queryparams') {
+				var urlObj = new URL(endpointUrl);
+				urlObj.searchParams.append(c.keyName, c.keyValue);
+				endpointUrl = urlObj.href;
+			} else if (c.authType == 'none') {
+				//do nothing
+			}
+
+
+
+			c.server.get({
+				action: 'sendMessage',
+				method: c.data.methodName,
+				endpoint: endpointUrl,
+				headers: headersObj,
+				body: c.data.requestBody.value
+			}).then(function(resp) {
+				c.data.responseBody.value = resp.data.responseBody;
+				c.data.statusFlag = resp.data.statusFlag;
+				c.data.httpStatus = resp.data.httpStatus;
+				spUtil.scrollTo('#response-body', 2000);
+			});
+		}
+	};
+
+	c.addHeader = function() {
+
+		if (c.headerKey && c.headerValue) {
+
+			var found = false;
+			for (i = 0; i < c.data.headersNew.length; i++) {
+				if (c.data.headersNew[i].key == c.headerKey) {
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				// Push the new item to the headers array
+				c.data.headersNew.push({
+					"key": c.headerKey,
+					"value": c.headerValue,
+					"editingKey": false,
+					"editingValue": false
+				});
+
+				//Clear the TextBoxes.
+				c.headerKey = "";
+				c.headerValue = "";
+			}
+		}
+
+	};
+
+	c.removeHeader = function(item, index) {
+
+		//Remove the item from Array using Index.
+		c.data.headersNew.splice(index, 1);
+
+	};
+
+	c.copy = function(str, source) {
+		if (str) {
+			navigator.clipboard.writeText(str).then(function(resp) {
+				$timeout(function() {
+					var prefix = (source == 'req') ? 'Request' : 'Response';
+					c.openToast(prefix + ' copied to clipboard.', 'success');
+				});
+			});
+		} else {
+			c.openToast('Nothing to copy.', 'error');
+		}
+	};
+
+	c.openJCModal = function(respObj) {
+		spModal.confirm("Response Body will be sent to external site to render graphical view.<br>Do you want to proceed?").then(function(confirmed) {
+			if (confirmed) {
+				spModal.open({
+					title: 'Diagram View',
+					widget: 'json_crack',
+					widgetInput: {
+						'obj': respObj
+					},
+					size: 'lg',
+					buttons: [{
+						label: '${Ok}',
+						primary: true
+					}],
+					headerStyle: {
+						'background': '#00539C',
+						'color': 'white',
+						'border-top-left-radius': '5px',
+						'border-top-right-radius': '5px'
+					}
+				}).then(function(answer) {
+
+				});
+
+				$timeout(function() {
+					angular.element('button.close.pull-right').remove();
+				}, 800);
+			}
+		});
+
+		$timeout(function() {
+			angular.element('button.close.pull-right').remove();
+		}, 100);
+
+	};
+
+};]]></client_script>
+        <controller_as>c</controller_as>
+        <css>@media (max-width: 959px) {
+  #mm-widget-container {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 960px) {
+  #mm-widget-container {
+    font-size: 16px;
+  }
+}
+
+#mm-widget-container {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+input:focus, button:focus {
+  box-shadow: none !important;
+}
+
+.remove-shadow:focus {
+  border: none !important; box-shadow: none !important;
+}
+
+.layout-row {
+  gap: 10px;
+}
+
+.align-pwd-icon {
+  align-self: center;
+  margin-top: -10px;
+}
+
+*:not(.glyphicon){
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+}
+
+
+.ig-elem1, .ig-elem2, .ig-elem4 {
+  height: 4rem;
+}
+
+.margin-8-column-16 {
+  margin: 8px;
+  gap: 16px;
+}
+
+.margin-left-right-6 {
+  margin: 0 6px;
+}
+
+.btn[disabled] {
+  opacity: 1;
+}
+
+.btn-pnl &gt; a {
+  color: inherit;
+}
+
+.glyphicon-stats {
+  margin-right: 10px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.my-group .ig-elem1 {
+  width: 25%;
+  background-color: $brand-primary;
+  color: white;
+}
+
+.vertical-middle {
+  vertical-align: middle;
+}
+
+.no-bottom-margin {
+  margin-bottom: 0px;
+}
+
+.top-margin-10 {
+  margin-top: 10px;
+}
+
+.top-margin-neg-20 {
+  margin-top: -20px;
+}
+
+.my-group .ig-elem2 {
+  width: 75%;
+}
+
+.no-left-right-padding {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#inputKey {
+  padding: 8px;
+}
+
+.panel-title {
+  font-weight: bold;
+  font-size: 1.7rem;
+}
+
+.bg-edit {
+  background: #FFF4A3;
+}
+
+textarea {
+  height: 161px;
+  width: 100%;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+  border: none;
+  resize: none;
+}
+
+.pop-class {
+  background: white;
+  color: $brand-primary;
+}
+
+
+/* Small devices (tablets, 768px and up) 
+@media (max-width: 991px) {
+#request-body, #response-text,
+#reqHeader-panel, #auth-panel {
+padding-left: 0;
+padding-right: 0;
+}
+}*/
+
+/* Medium devices (desktops, 992px and up) 
+@media (min-width: 992px) {
+#request-body, #auth-panel {
+padding-left: 0;
+}
+
+#response-text, #reqHeader-panel {
+padding-right: 0;
+}
+
+#reqHeader-panel &gt; .panel &gt; .panel-body {
+height: 200px;
+overflow-y: auto;
+}
+
+#auth-panel &gt; .panel &gt; .panel-body {
+height: 255px;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+}*/
+
+/*
+#no-auth-group {
+height: 100%;
+display: flex;
+flex-direction: row;
+align-items: center;
+justify-content: center;
+}
+
+
+}*/
+
+.no-padding {
+  padding: 0;
+}
+
+#remove-header-icon {
+  color: red;
+}
+
+#remove-header-icon {
+  color: darkgreen;
+}
+
+td
+{
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.full-span {
+  display: block;
+}
+
+.editable-input {
+  width: 100%;
+  border: none;
+  background: #FFF4A3;
+}
+
+.editable-input:focus {
+  box-shadow: none;
+}
+
+.iframe-preview {
+  width: 100%;
+  height: 100%;
+  padding-top: 5px;
+  border: none;
+}
+
+.footer-height {
+  height: 20px;
+}
+
+
+/* Scrollbar CSS */
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $brand-primary;
+  border-radius: 5px; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: lighten($brand-primary, 10%);  
+}
+
+
+/* above each code section */
+.minibar {
+  padding: 2px;
+
+  .btn {
+    border: none;
+  }
+}
+
+input[type=checkbox] {
+  margin-right: .25em;
+}
+
+.check {
+  white-space: nowrap;
+  margin-bottom: 0;
+  margin-left: 1rem;
+}
+
+.CodeMirror {
+  border-radius: 0px 0px 5px 5px;
+  border: none;
+  height: 250px;
+}
+
+.CodeMirror-hscrollbar {
+  height: 8px;
+}
+
+pre.CodeMirror-line {
+  font-size: 14px !important;
+}
+
+.animate {
+  transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+  -webkit-transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+}
+
+
+.relative {
+  position: relative;
+}
+
+.button-nav {
+  .btn-group {
+    margin-left: 0.5rem;
+  }
+
+  button {
+    min-width: 40px;
+  }
+}
+
+.doc {
+  overflow: auto;
+  width: 98%;
+}
+
+.doc-icons {
+  position: absolute;
+  padding: 5px;
+  right: 0px;
+}
+
+.dropdown-icon {
+  padding-right: 10px;
+}
+
+.sp-dep {
+  width: 200px;
+}
+
+.read-only-message {
+  text-align: center;
+
+  .alert {
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+
+}
+
+.cm-s-snc_readonly { background-color: #e6e8ea; color: #444444; }
+
+.cm-s-snc_readonly_readonly span.cm-meta { color: #FF1717; }
+
+.cm-s-snc_readonly span.cm-keyword { font-weight: bold; color: #7F0055; }
+
+.cm-s-snc_readonly span.cm-atom { color: #219; }
+
+.cm-s-snc_readonly span.cm-number { color: #164; }
+
+.cm-s-snc_readonly span.cm-def { color: #00f; }
+
+.cm-s-snc_readonly span.cm-variable { color: black; }
+
+.cm-s-snc_readonly span.cm-variable-2 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-variable-3 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-property { color: black; }
+
+.cm-s-snc_readonly span.cm-operator { color: black; }
+
+.cm-s-snc_readonly span.cm-comment { color: #3F7F5F; }
+
+.cm-s-snc_readonly span.cm-string { color: #2A00FF; }
+
+.cm-s-snc_readonly span.cm-string-2 { color: #f50; }
+
+.cm-s-snc_readonly span.cm-error { color: #f00; }
+
+.cm-s-snc_readonly span.cm-qualifier { color: #555; }
+
+.cm-s-snc_readonly span.cm-builtin { color: #30a; }
+
+.cm-s-snc_readonly span.cm-bracket { color: #cc7; }
+
+.cm-s-snc_readonly span.cm-tag { color: #170; }
+
+.cm-s-snc_readonly span.cm-attribute { color: #00c; }
+
+.cm-s-snc_readonly span.cm-link { color: #219; }
+
+.cm-s-snc_readonly .CodeMirror-matchingbracket {
+  color: OrangeRed !important;;
+}
+
+// readonly
+[role="editor-container"][data-readonly="true"] {
+  .CodeMirror {
+    background-color: #F7F7F7 !important;
+  }
+}</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>mailman_widget_new</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Mailman Widget New</name>
+        <option_schema>[{"name":"methodname","section":"Data","label":"Method Name","type":"string"},&#13;
+{"name":"endpointurl","section":"Data","label":"Endpoint URL","type":"string"},{"name":"preloadsaveddata","section":"Data","default_value":"false","label":"Preload Saved Data","type":"boolean"},{"name":"headersnew","section":"Data","label":"Headers","type":"string"},&#13;
+{"name":"requestbody","section":"Data","label":"Request Body","type":"string"},&#13;
+{"name":"responsebody","section":"Data","label":"Response Body","type":"string"}]</option_schema>
+        <public>true</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+
+	if (!input) {
+		data.headersNew = [{
+			"key": "Content-Type",
+			"value": "application/json",
+			"editingKey": false,
+			"editingValue": false
+		}, {
+			"key": "Accept",
+			"value": "application/json",
+			"editingKey": false,
+			"editingValue": false
+		}];
+
+		data.responseBody = {
+			"value": JSON.stringify({}, null, 4)
+		};
+
+		data.requestBody = {
+			"value": JSON.stringify({}, null, 4)
+		};
+	} else {
+
+		if (input.preloadsaveddata == 'true') {
+			data.methodName = input.methodname;
+			data.endpointUrl = input.endpointurl;
+			data.headersNew = input.headersnew;
+			data.requestBody = input.requestbody;
+			data.responseBody = input.responsebody;
+			data.statusFlag = input.statusflag;
+			data.httpStatus = input.httpstatus;
+		}
+		// data.responseBody = {
+		//     "value": JSON.stringify({}, null, 4)
+		// };
+	}
+
+	if (input && input.action == 'sendMessage') {
+		try {
+			var r = new sn_ws.RESTMessageV2();
+			r.setEndpoint(input.endpoint);
+			r.setHttpMethod(input.method);
+			for (var key in input.headers) {
+				r.setRequestHeader(key, input.headers[key]);
+			}
+
+			if (input.body) {
+				r.setRequestBody(input.body);
+			}
+
+			var response = r.execute();
+			data.httpStatus = response.getStatusCode();
+
+			if (data.httpStatus >= 200 && data.httpStatus <= 299)
+				data.statusFlag = true;
+			else
+				data.statusFlag = false;
+
+			try {
+				data.responseBody = JSON.stringify(JSON.parse(response.getBody()), null, 4);
+			} catch (e) {
+				data.responseBody = response.getBody();
+			}
+
+		} catch (ex) {
+			data.output = ex;
+			gs.addErrorMessage(data.output);
+		}
+	}
+
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-10-21 18:20:01</sys_created_on>
+        <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
+        <sys_mod_count>169</sys_mod_count>
+        <sys_name>Mailman Widget New</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-10-25 08:07:48</sys_updated_on>
+        <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet"/>
+
+<div id="mm-widget-container">
+
+  <div class="row123" id="endpoint-input">
+    <form name="inputForm">
+      <div layout="row" class="margin-left-right-6">
+        <md-input-container class="no-bottom-margin" flex="20">
+          <label>Method</label>
+          <md-select class="remove-shadow" ng-init="c.data.methodName = c.data.methodName || 'GET'" ng-model="c.data.methodName">
+            <md-option style="border: none !important; box-shadow: none !important;" value="GET">GET</md-option>
+            <md-option style="border: none !important; box-shadow: none !important;" value="POST">POST</md-option>
+            <md-option style="border: none !important; box-shadow: none !important;" value="PUT">PUT</md-option>
+            <md-option style="border: none !important; box-shadow: none !important;" value="PATCH">PATCH</md-option>
+            <md-option style="border: none !important; box-shadow: none !important;" value="DELETE">DELETE</md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container class="no-bottom-margin" flex="80">
+          <label>URL</label>
+          <input id="urlInput" name="urlInput" ng-model="c.data.endpointUrl" ng-pattern="c.regex" ng-required="true" />
+        </md-input-container>
+        <div class="text-center">
+          <md-button class="md-fab md-mini md-primary" ng-disabled="inputForm.urlInput.$invalid" type="submit" ng-click="c.submit()">
+            <md-icon>send</md-icon>
+          </md-button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div id="body-2" layout="column">
+    <div id="auth-header" layout="column" layout-gt-sm="row" class="margin-8-column-16">
+      <md-content id="auth-panel" md-whiteframe="4" flex>
+        <md-toolbar class="md-hue-2">
+          <div class="md-toolbar-tools">
+            <h2 flex md-truncate>Authorization</h2>
+          </div>
+        </md-toolbar>
+
+        <md-content flex="column" class="inset">
+          <md-input-container id="authTypeId" flex class="md-block">
+            <label for="authType">Type</label>
+            <md-select id="authType" class="remove-shadow" ng-init="c.authType='none'" ng-model="c.authType">
+              <md-option style="border: none !important; box-shadow: none !important;" value="none">No Auth</md-option>
+              <md-option style="border: none !important; box-shadow: none !important;" value="basic">Basic Auth</md-option>
+              <md-option style="border: none !important; box-shadow: none !important;" value="bearer">Bearer</md-option>
+              <md-option style="border: none !important; box-shadow: none !important;" value="apikey-header">API Key (in Header)</md-option>
+              <md-option style="border: none !important; box-shadow: none !important;" value="apikey-queryparams">API Key (in Query Params)</md-option>
+            </md-select>
+          </md-input-container>
+
+          <md-content layout="column" layout-align="center center" id="no-auth-group" ng-if="c.authType=='none'" layout-margin layout-padding layout-fill>
+            <span>${No authorization required.}</span>
+          </md-content>
+
+          <md-content layout="column" id="basic-auth-group" ng-if="c.authType=='basic'">
+            <md-input-container>
+              <label for="username">Username</label>
+              <input type="text" id="username" ng-model="c.username" />
+            </md-input-container>
+
+            <md-content layout="row">
+              <md-input-container flex>
+                <label for="pwd">Password</label>
+                <input type="{{c.passInputType}}" id="pwd" ng-model="c.password"/>
+              </md-input-container>
+              <md-input-container>
+                <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
+                  <md-icon ng-if="c.showPassword">visibility</md-icon>
+                  <md-icon ng-if="!c.showPassword">visibility_off</md-icon>
+                </md-button>
+              </md-input-container>
+            </md-content>
+
+          </md-content>
+
+          <md-content layout="row" id="bearer-auth-group" ng-if="c.authType=='bearer'">
+            <md-input-container flex>
+              <label for="token">Token</label>
+              <input type="{{c.passInputType}}" id="token" ng-model="c.token" />
+            </md-input-container>
+            <md-input-container>
+              <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
+                <md-icon ng-if="c.showPassword" class="material-icons">visibility</md-icon>
+                <md-icon ng-if="!c.showPassword" class="material-icons">visibility_off</md-icon>
+              </md-button>
+            </md-input-container>
+          </md-content>
+
+          <md-content layout="column" id="apikey-auth-group" ng-if="c.authType=='apikey-header' || c.authType=='apikey-queryparams'">
+            <md-input-container>
+              <label for="keyName">Key</label>
+              <input type="text" id="keyName" ng-model="c.keyName" />
+            </md-input-container>
+
+            <md-content layout="row">
+              <md-input-container flex>
+                <label for="keyValue">Value</label>
+                <input type="{{c.passInputType}}" id="keyValue" ng-model="c.keyValue" />
+              </md-input-container>
+              <md-input-container>
+                <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
+                  <md-icon ng-if="c.showPassword">visibility</md-icon>
+                  <md-icon ng-if="!c.showPassword">visibility_off</md-icon>
+                </md-button>
+              </md-input-container>
+            </md-content>
+          </md-content>
+        </md-content>
+      </md-content>
+
+      <md-content id="request-headers" md-whiteframe="4" flex>
+        <md-toolbar class="md-hue-2">
+          <div class="md-toolbar-tools">
+            <h2 flex md-truncate>Request Headers</h2>
+          </div>
+        </md-toolbar>
+
+        <md-content flex="column" class="inset">
+          <table id="request-header-table" class="table no-bottom-margin" width="100%">
+            <thead>
+              <tr>
+                <th width="30%">Key</th>
+                <th width="50%">Value</th>
+                <th width="20%" class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="item in c.data.headersNew">
+                <td width="30%" class="vertical-middle" ng-class="{'bg-edit': item.editingKey}">
+                  <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">
+                    {{item.key}}
+                  </span>
+                  <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
+                </td>
+                <td width="50%" class="vertical-middle" ng-class="{'bg-edit': item.editingValue}">
+                  <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">
+                    {{item.value}}
+                  </span>
+                  <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')" />
+                </td>
+                <td width="20%" class="text-center vertical-middle">
+                  <md-button class="md-icon-button md-warn md-hue-2" ng-click="c.removeHeader(item, $index)">
+                    <md-icon>highlight_off</md-icon>
+                  </md-button>
+                </td>
+              </tr>
+              <tr>
+                <td width="30%" class="vertical-middle no-left-right-padding">
+                  <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
+                    <input id="inputKey" type="text" ng-model="c.headerKey" placeholder="Key" />
+                  </md-input-container>
+                </td>
+                <td width="50%" class="vertical-middle">
+                  <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
+                    <input id="inputValue" type="text" ng-model="c.headerValue" placeholder="Value" />
+                  </md-input-container>
+                </td>
+                <td width="20%" class="text-center vertical-middle">
+                  <md-button class="md-icon-button md-accent md-hue-3 top-margin-neg-20" ng-click="c.addHeader()">
+                    <md-icon>add_circle_outline</md-icon>
+                  </md-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-content>
+      </md-content>
+    </div>
+
+    <div id="req-resp-body" layout="column" layout-gt-sm="row" class="margin-8-column-16">
+      <md-content id="request-body" md-whiteframe="4" flex>
+        <md-toolbar class="md-hue-2">
+          <div class="md-toolbar-tools">
+            <h2 flex md-truncate>Request Body</h2>
+            <md-button ng-click="c.copy(c.data.requestBody.value, 'req')" class="md-icon-button">
+              <md-icon>content_copy</md-icon>
+            </md-button>
+            <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.requestBody.value)" ng-if="c.data.requestBody.value != '' && c.data.requestBody.value != '{}'">
+              <md-icon>code</md-icon>
+            </md-button>
+          </div>
+        </md-toolbar>
+
+        <md-content flex="column">
+          <textarea class="form-control" ng-model="c.data.requestBody.value" ng-if="c.isMobile"></textarea>
+          <sp-script-editor id="editor" field="c.data.requestBody" data-length="4000" sn-disabled="false" sn-widget-scope-js-level="traditional" sn-server-side="false" ng-if="!c.isMobile" />
+        </md-content>
+      </md-content>
+
+      <md-content id="response-body" md-whiteframe="4" flex>
+        <md-toolbar ng-class="{'md-primary md-hue-2': c.data.statusFlag==undefined, 'md-accent md-hue-2': c.data.statusFlag==true, 'md-warn md-hue-2': c.data.statusFlag==false}">
+          <div class="md-toolbar-tools">
+            <h2 flex md-truncate>Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span></h2>
+            <md-button class="md-icon-button" ng-click="c.copy(c.data.responseBody.value, 'resp')">
+              <md-icon>content_copy</md-icon>
+            </md-button>
+            <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.responseBody.value)" ng-if="c.data.responseBody.value != '' && c.data.responseBody.value != '{}'">
+              <md-icon>code</md-icon>
+            </md-button>
+          </div>
+        </md-toolbar>
+
+        <md-content flex="column">
+          <sp-script-editor id="editor" field="c.data.responseBody" data-length="4000" class="form-control" sn-disabled="true" sn-widget-scope-js-level="traditional" sn-server-side="false" />
+        </md-content>
+      </md-content>
+
+    </div>
+  </div>
+</div>]]></template>
+    </sp_widget>
+</record_update>
