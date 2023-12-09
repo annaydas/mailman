@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_auth_profile_basic">
+    <sys_auth_profile_basic action="INSERT_OR_UPDATE">
+        <name>dev131733</name>
+        <password>﷞﷟﷒e60a738797c021108950bfb6f053af51﷬﷔1﷬﷭5pK90zVXfICW_aC28Mymsg==4LX8fFBpswn8iwT7vMyP0SpWsg==﷮﷯</password>
+        <sys_class_name>sys_auth_profile_basic</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-12-09 20:46:10</sys_created_on>
+        <sys_id>f63d5109970bb91056e8b3e6f053af74</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>dev131733</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>sys_auth_profile_basic_f63d5109970bb91056e8b3e6f053af74</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-12-09 21:01:53</sys_updated_on>
+        <username>mailman.user</username>
+    </sys_auth_profile_basic>
+</record_update>

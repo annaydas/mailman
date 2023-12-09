@@ -1,16 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller = function(spUtil, $scope) {
+        <client_script><![CDATA[api.controller = function($timeout, $window, spUtil, $scope, $mdSidenav) {
 	/* widget controller */
 	var c = this;
 
 	c.tabs = [];
 	c.loading = false;
+	c.selectedTabIndex = 0;
+	c.namespaces = [];
+	c.namespace = undefined;
+	c.apiName = undefined;
+	c.apiVersion = undefined;
+
 
 	$scope.$on('sp_loading_indicator', function(e, value) {
 		c.loading = value;
 	});
+
+	c.openNav = function(){
+		$mdSidenav('left-nav').open();
+		spUtil.scrollTo('.navbar-header', 1000);
+	};
+
+
+	c.closeNav = function(dataObj){
+		$mdSidenav('left-nav', true).close().then(function() {
+			angular.element('section.page')[0].scroll(0, 0.1);
+		});
+		/*$timeout(function() {
+			angular.element('section.page')[0].scroll(0, 0.1);
+		}, 500);*/
+
+		if(dataObj && c.apiResource!=''){
+			dataObj.endpointUrl = 'https://' + location.hostname + '/api' + c.apiResource.split('###')[1];
+			dataObj.methodName = c.apiResource.split('###')[0];
+			console.log(dataObj);
+		}
+
+	};
 
 	var storedRequests = localStorage.getItem('mailmanSavedRequests');
 	if (storedRequests == null || storedRequests == '[]') {
@@ -44,6 +72,7 @@
 	}
 
 	c.closeTab = function(index) {
+
 		if (c.tabs.length > 1) {
 			var closedWidID = c.tabs[index].id;
 			var storageArr = JSON.parse(localStorage.getItem('mailmanSavedRequests'));
@@ -109,6 +138,25 @@
 		//return Math.floor(Math.random()*90000000) + 10000000;
 	};
 
+	c.loadNamespaces = function() {
+		return c.server.get({
+			action: 'getNamespaces'
+		}).then(function(resp){
+			c.namespaces = resp.data.namespaces;
+		});
+	};
+
+	c.loadApiNames = function(ns) {
+		c.apiName = '';
+		c.apiVersion = '';
+		return c.server.get({
+			action: 'getApiNames',
+			namespace: ns
+		}).then(function(resp) {
+			c.apiNames = JSON.parse(resp.data.apiNames);
+		});
+	}
+
 };]]></client_script>
         <controller_as>c</controller_as>
         <css>*:not(.glyphicon){
@@ -119,20 +167,25 @@
   font-family: 'Material Icons';
 }
 
+.remove-shadow:focus {
+  border: none !important; box-shadow: none !important;
+}
+
 .loadingOverlay {
   position: fixed;
   top:0px;
   right:0px;
   width:100%;
   height:100%;
-  background-image: url('x_792082_mailman.mailman-loading.svg');
-  background-size: 100px;
-  background-repeat:no-repeat;
-  background-position:center;
   z-index:10000000;
   backdrop-filter: blur(2px) contrast(0.5);
   opacity: 1;
   transition: opacity 0.2s ease-out;
+}
+
+.progressCircle {
+  top: calc(50vh - 40px);
+  left: calc(50vw - 40px);
 }
 
 .loadingOverlay.ng-hide {
@@ -156,6 +209,11 @@
   bottom: 40px;
 }
 
+#open-rest-explorer {
+  position: fixed;
+  bottom: 110px;
+}
+
 md-ink-bar {
   background: $brand-primary;
 }
@@ -177,7 +235,11 @@ md-ink-bar {
 .mailman-tab-width{
   min-width: 200px;
 }
-</css>
+
+.md-sidenav-left:focus {
+  border: none;
+  box-shadow: none;
+}</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
         <description/>
@@ -191,32 +253,142 @@ md-ink-bar {
         <option_schema/>
         <public>true</public>
         <roles/>
-        <script><![CDATA[(function() {  /* populate the 'data' object */  /* e.g., data.table = $sp.getValue('table'); */})();]]></script>
+        <script><![CDATA[(function() {
+	
+	var basicAuthProfileSysID = gs.getProperty('x_792082_mailman.mailman.basic_auth_profile.sys_id');
+
+	if(input) {
+		var errorMessage = ''
+		if(input.action == 'getNamespaces'){
+			try {
+				var nsRestMessage = new sn_ws.RESTMessageV2();
+				nsRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
+				nsRestMessage.setHttpMethod("get");
+				nsRestMessage.setEndpoint("https://dev131733.service-now.com/api/now/doc/namespaces");
+				var nsResponse = nsRestMessage.execute();
+				var nsResponseBody = nsResponse.getBody();
+				var nsHttpStatus = nsResponse.getStatusCode();
+				if(nsHttpStatus == 200) {
+					var nsObj = JSON.parse(nsResponseBody);
+					data.namespaces = nsObj.result;
+				}
+			}
+			catch (ex) {
+				errorMessage = ex.message;
+			}
+		}
+
+		if(input.action == "getApiNames") {
+			try {
+				var apiNameRestMessage = new sn_ws.RESTMessageV2();
+				apiNameRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
+				apiNameRestMessage.setHttpMethod("get");
+				apiNameRestMessage.setEndpoint("https://dev131733.service-now.com/api/now/doc/services?namespace="+input.namespace);
+				var apiNameResponse = apiNameRestMessage.execute();
+				var apiNameResponseBody = apiNameResponse.getBody();
+				var apiNameHttpStatus = apiNameResponse.getStatusCode();
+				if(apiNameHttpStatus == 200) {
+					var anObj = JSON.parse(apiNameResponseBody)['result'][input.namespace];
+
+					// Sort API Names alphabetically
+					var anObjSorted = Object.keys(anObj).sort().reduce(function (obj, key) {
+						obj[key] = anObj[key];
+						return obj;
+					}, {});
+
+					// Need to stringfy, otherwise the alphabetical sort is getting lost, don't know why though
+					// Will parse it in client script
+					data.apiNames = JSON.stringify(anObjSorted, null, 4);
+				}
+			}
+			catch (ex) {
+				errorMessage = ex.message;
+			}
+		}
+	}
+
+
+})();]]></script>
         <servicenow>false</servicenow>
         <sys_class_name>sp_widget</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:25:23</sys_created_on>
         <sys_id>1f1768d597ce311056e8b3e6f053af54</sys_id>
-        <sys_mod_count>47</sys_mod_count>
+        <sys_mod_count>166</sys_mod_count>
         <sys_name>Mailman Body New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_1f1768d597ce311056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-10-25 05:56:04</sys_updated_on>
+        <sys_updated_on>2023-12-09 20:57:40</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
-<div ng-show="c.loading==true" ng-hide="c.loading!=true" id="mailman-loader-div" class="loadingOverlay"></div>
+
+<div ng-show="c.loading==true" ng-hide="c.loading!=true" id="mailman-loader-div" class="loadingOverlay">
+  <md-progress-circular class="md-primary md-hue-2 progressCircle" md-diameter="80" md-mode="indeterminate"></md-progress-circular>
+</div>
 
 <div class="">
+  <md-sidenav md-component-id="left-nav" class="md-sidenav-left">
+    <md-toolbar class="md-primary md-hue-2">
+      <h1 class="md-toolbar-tools">REST Explorer</h1>
+    </md-toolbar>
+    <md-content layout-padding>
+      <div layout="column">
+
+        <md-input-container>
+          <label for="ns-select">Namespace</label>
+          <md-select id="ns-select" ng-model="c.namespace" md-on-open="c.loadNamespaces()" ng-change="c.loadApiNames(c.namespace)" class="remove-shadow">
+            <md-option style="border: none !important; box-shadow: none !important;" ng-value="ns" ng-repeat="ns in c.namespaces">{{ns}}</md-option>
+          </md-select>
+        </md-input-container>
+
+        <md-input-container>
+          <label for="api-name-select">API Name</label>
+          <md-select id="api-name-select" ng-model="c.apiName" class="remove-shadow">
+            <md-option style="border: none !important; box-shadow: none !important;" ng-value="key" ng-repeat="(key,value) in c.apiNames">{{key}}</md-option>
+          </md-select>
+        </md-input-container>
+
+        <md-input-container>
+          <label for="api-version-select">API Version</label>
+          <md-select id="api-version-select" ng-model="c.apiVersion" ng-change="" class="remove-shadow">
+            <md-option style="border: none !important; box-shadow: none !important;" ng-value="key" ng-repeat="(key, value) in c.apiNames[c.apiName].versions">{{key}}</md-option>
+          </md-select>
+        </md-input-container>
+
+        <md-input-container>
+          <label for="api-resource-select">API Resource</label>
+          <md-select id="api-resource-select" ng-model="c.apiResource" ng-change="" class="remove-shadow">
+            <md-option style="border: none !important; box-shadow: none !important;" ng-value="res.httpMethod+'###'+res.route" ng-repeat="res in c.apiNames[c.apiName]['versions'][c.apiVersion].resources | orderBy:'httpMethod'">{{res.httpMethod}} - {{res.description}}</md-option>
+          </md-select>
+        </md-input-container>
+
+      </div>
+
+      <div layout="row">
+        <md-button ng-disabled="!c.namespace || !c.apiName || !c.apiVersion || !c.apiResource" ng-click="c.closeNav(c.tabs[c.selectedTabIndex].widget.data)" class="md-raised md-accent flex-grow">
+          Apply
+        </md-button>
+        <md-button ng-click="c.closeNav()" class="md-raised md-warn flex-grow">
+          Close
+        </md-button>
+      </div>
+
+    </md-content>
+  </md-sidenav>
 
   <md-button id="new-req-btn" ng-click="c.openTab()" class="md-primary md-hue-3 md-raised md-fab md-fab-bottom-right" aria-label="Create New">
     <md-icon>add</md-icon>
   </md-button>
 
-  <md-tabs id="mailman-tabs" md-dynamic-height md-border-bottom md-swipe-content>
+  <md-button id="open-rest-explorer" ng-click="c.openNav()" class="md-accent md-hue-1 md-raised md-fab md-fab-bottom-right" aria-label="Create New">
+    <md-icon>interests</md-icon>
+  </md-button>
+
+  <md-tabs id="mailman-tabs" md-selected="c.selectedTabIndex" md-dynamic-height md-border-bottom md-swipe-content>
 
     <md-tab md-tab-class="font-large mailman-tab-width remove-shadow" ng-repeat="tab in c.tabs track by tab.id" md-on-select="c.tabSelected()" md-active="tab.active">
 
