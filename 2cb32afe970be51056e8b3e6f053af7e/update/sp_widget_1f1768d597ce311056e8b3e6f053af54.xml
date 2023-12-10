@@ -12,6 +12,8 @@
 	c.namespace = undefined;
 	c.apiName = undefined;
 	c.apiVersion = undefined;
+	c.searchTerm = '';
+	c.hostName = c.data.servletUri;
 
 
 	$scope.$on('sp_loading_indicator', function(e, value) {
@@ -33,9 +35,8 @@
 		}, 500);*/
 
 		if(dataObj && c.apiResource!=''){
-			dataObj.endpointUrl = 'https://' + location.hostname + '/api' + c.apiResource.split('###')[1];
+			dataObj.endpointUrl = c.hostName + 'api' + c.apiResource.split('###')[1];
 			dataObj.methodName = c.apiResource.split('###')[0];
-			console.log(dataObj);
 		}
 
 	};
@@ -155,7 +156,17 @@
 		}).then(function(resp) {
 			c.apiNames = JSON.parse(resp.data.apiNames);
 		});
-	}
+	};
+
+	c.loadApiDetails = function(selectedResource) {
+		return c.server.get({
+			action: 'getApiDetails',
+			method: c.apiResource.split('###')[0],
+			resource: c.apiResource.split('###')[1]
+		}).then(function(resp){
+			c.apiDetails = resp.data.apiDetails;
+		});
+	};
 
 };]]></client_script>
         <controller_as>c</controller_as>
@@ -163,8 +174,30 @@
   font-family: 'Ubuntu Mono', monospace;
 }
 
+@media (min-width: 600px) {
+  md-sidenav {
+    min-width: 450px;
+  }
+}
+
+.hello-123{
+  flex-grow: 1;
+}
+
+.header-text-wrap {
+  text-wrap: wrap;
+}
+
 .material-icons {
   font-family: 'Material Icons';
+}
+
+md-icon.icon-center-align {
+  align-self: center;
+}
+
+md-icon.font-1 {
+  font-size: 1px; //Intentioanlly made Too small to be seen
 }
 
 .remove-shadow:focus {
@@ -206,12 +239,12 @@
 
 #new-req-btn {
   position: fixed;
-  bottom: 40px;
+  bottom: 50px;
 }
 
 #open-rest-explorer {
   position: fixed;
-  bottom: 110px;
+  bottom: 120px;
 }
 
 md-ink-bar {
@@ -239,6 +272,10 @@ md-ink-bar {
 .md-sidenav-left:focus {
   border: none;
   box-shadow: none;
+}
+
+.margin-top-bottom-10 {
+  margin: 10px auto;
 }</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
@@ -254,8 +291,9 @@ md-ink-bar {
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
-	
+
 	var basicAuthProfileSysID = gs.getProperty('x_792082_mailman.mailman.basic_auth_profile.sys_id');
+	data.servletUri = gs.getProperty('glide.servlet.uri');
 
 	if(input) {
 		var errorMessage = ''
@@ -264,7 +302,7 @@ md-ink-bar {
 				var nsRestMessage = new sn_ws.RESTMessageV2();
 				nsRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
 				nsRestMessage.setHttpMethod("get");
-				nsRestMessage.setEndpoint("https://dev131733.service-now.com/api/now/doc/namespaces");
+				nsRestMessage.setEndpoint(data.servletUri + "api/now/doc/namespaces");
 				var nsResponse = nsRestMessage.execute();
 				var nsResponseBody = nsResponse.getBody();
 				var nsHttpStatus = nsResponse.getStatusCode();
@@ -283,7 +321,7 @@ md-ink-bar {
 				var apiNameRestMessage = new sn_ws.RESTMessageV2();
 				apiNameRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
 				apiNameRestMessage.setHttpMethod("get");
-				apiNameRestMessage.setEndpoint("https://dev131733.service-now.com/api/now/doc/services?namespace="+input.namespace);
+				apiNameRestMessage.setEndpoint(data.servletUri + "api/now/doc/services?namespace="+input.namespace);
 				var apiNameResponse = apiNameRestMessage.execute();
 				var apiNameResponseBody = apiNameResponse.getBody();
 				var apiNameHttpStatus = apiNameResponse.getStatusCode();
@@ -305,6 +343,25 @@ md-ink-bar {
 				errorMessage = ex.message;
 			}
 		}
+
+		if(input.action == 'getApiDetails'){
+			try {
+				var apiDetailsRestMessage = new sn_ws.RESTMessageV2();
+				apiDetailsRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
+				apiDetailsRestMessage.setHttpMethod("get");
+				apiDetailsRestMessage.setEndpoint(data.servletUri + "api/now/doc/" + input.method + "?route=" + encodeURIComponent(input.resource));
+				var apiDetailsResponse = apiDetailsRestMessage.execute();
+				var apiDetailsResponseBody = apiDetailsResponse.getBody();
+				var apiDetailsHttpStatus = apiDetailsResponse.getStatusCode();
+				if(apiDetailsHttpStatus == 200) {
+					data.apiDetails = JSON.parse(apiDetailsResponseBody).result;
+				}
+			}
+			catch (ex) {
+				errorMessage = ex.message;
+			}
+		}
+
 	}
 
 
@@ -314,14 +371,14 @@ md-ink-bar {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:25:23</sys_created_on>
         <sys_id>1f1768d597ce311056e8b3e6f053af54</sys_id>
-        <sys_mod_count>166</sys_mod_count>
+        <sys_mod_count>231</sys_mod_count>
         <sys_name>Mailman Body New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_1f1768d597ce311056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-12-09 20:57:40</sys_updated_on>
+        <sys_updated_on>2023-12-10 19:32:12</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
@@ -330,12 +387,16 @@ md-ink-bar {
   <md-progress-circular class="md-primary md-hue-2 progressCircle" md-diameter="80" md-mode="indeterminate"></md-progress-circular>
 </div>
 
-<div class="">
+<!--<div class="" layout="row">-->
+<div>
+
+  <!--<md-sidenav md-component-id="left-nav" class="md-sidenav-left" md-is-locked-open="">-->
   <md-sidenav md-component-id="left-nav" class="md-sidenav-left">
     <md-toolbar class="md-primary md-hue-2">
       <h1 class="md-toolbar-tools">REST Explorer</h1>
     </md-toolbar>
     <md-content layout-padding>
+
       <div layout="column">
 
         <md-input-container>
@@ -348,6 +409,11 @@ md-ink-bar {
         <md-input-container>
           <label for="api-name-select">API Name</label>
           <md-select id="api-name-select" ng-model="c.apiName" class="remove-shadow">
+            <!--<md-select-header class="demo-select-header">
+              <input ng-model="c.searchTerm" aria-label="Vegetable filter"
+                     type="search" placeholder="Ex. Onions"
+                     class="demo-header-searchbox md-text">
+            </md-select-header>-->
             <md-option style="border: none !important; box-shadow: none !important;" ng-value="key" ng-repeat="(key,value) in c.apiNames">{{key}}</md-option>
           </md-select>
         </md-input-container>
@@ -361,11 +427,66 @@ md-ink-bar {
 
         <md-input-container>
           <label for="api-resource-select">API Resource</label>
-          <md-select id="api-resource-select" ng-model="c.apiResource" ng-change="" class="remove-shadow">
+          <md-select id="api-resource-select" ng-model="c.apiResource" ng-change="c.loadApiDetails(c.apiResource)" class="remove-shadow">
             <md-option style="border: none !important; box-shadow: none !important;" ng-value="res.httpMethod+'###'+res.route" ng-repeat="res in c.apiNames[c.apiName]['versions'][c.apiVersion].resources | orderBy:'httpMethod'">{{res.httpMethod}} - {{res.description}}</md-option>
           </md-select>
         </md-input-container>
 
+        <div id="api-details-div" ng-if="c.apiDetails">
+          <div class="margin-top-bottom-10" ng-if="c.apiNames[c.apiName] != undefined">
+            <strong>{{c.apiNames[c.apiName].svcName}}</strong>
+            <br/>
+            {{c.apiNames[c.apiName].description}}
+          </div>
+
+          <pre>{{c.apiResource.split('###')[0]}} {{c.hostName + 'api' + c.apiResource.split('###')[1];}}</pre>
+
+          <md-list ng-if="c.apiDetails.produces.length > 0" flex>
+            <md-list-item class="md-3-line">
+              <md-icon class="icon-center-align">arrow_back</md-icon>
+              <div class="md-list-item-text" layout="column">
+                <h3 class="header-text-wrap">Content Type</h3>
+                <p ng-repeat="item in c.apiDetails.produces">{{item}}</p>
+              </div>
+            </md-list-item>
+          </md-list>
+
+          <md-list ng-if="c.apiDetails.consumes.length > 0" flex>
+            <md-list-item class="md-3-line">
+              <md-icon class="icon-center-align">arrow_forward</md-icon>
+              <div class="md-list-item-text" layout="column">
+                <h3 class="header-text-wrap">Accepts</h3>
+                <p ng-repeat="item in c.apiDetails.consumes">{{item}}</p>
+              </div>
+            </md-list-item>
+          </md-list>
+
+          <md-list ng-if="c.apiDetails.pathParams.length > 0" flex>
+            <md-list-item class="md-3-line">
+              <md-icon class="icon-center-align">description</md-icon>
+              <div class="md-list-item-text" layout="column">
+                <h3 class="header-text-wrap">Request Parameters</h3>
+                <p ng-repeat="item in c.apiDetails.pathParams">{{item.name}}</p>
+              </div>
+            </md-list-item>
+          </md-list>
+
+          <md-list ng-if="c.apiDetails.requestParams.length > 0" flex>
+            <md-list-item class="md-3-line">
+              <md-icon class="icon-center-align">api</md-icon>
+              <div class="md-list-item-text" layout="column">
+                <h3 class="header-text-wrap">Query Parameters</h3>
+              </div>
+            </md-list-item>
+            <md-list-item ng-repeat="item in c.apiDetails.requestParams" class="md-3-line">
+              <md-icon class="icon-center-align font-1">fiber_manual_record</md-icon>
+              <div class="md-list-item-text" layout="column">
+                <h4 class="header-text-wrap">{{item.name}} - {{item.required}}</h4>
+                <p>{{item.description}}</p>
+              </div>
+            </md-list-item>
+          </md-list>
+        </div>
       </div>
 
       <div layout="row">
@@ -388,7 +509,8 @@ md-ink-bar {
     <md-icon>interests</md-icon>
   </md-button>
 
-  <md-tabs id="mailman-tabs" md-selected="c.selectedTabIndex" md-dynamic-height md-border-bottom md-swipe-content>
+  <!--<md-tabs id="mailman-tabs" class="hello-123" md-selected="c.selectedTabIndex" md-dynamic-height md-border-bottom md-swipe-content>-->
+  <md-tabs id="mailman-tabs" class="hello-123" md-selected="c.selectedTabIndex" md-dynamic-height md-border-bottom md-swipe-content>
 
     <md-tab md-tab-class="font-large mailman-tab-width remove-shadow" ng-repeat="tab in c.tabs track by tab.id" md-on-select="c.tabSelected()" md-active="tab.active">
 
