@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller = function($timeout, $window, spUtil, $scope, $mdSidenav) {
+        <client_script><![CDATA[api.controller = function($timeout, spUtil, $scope, $mdSidenav) {
 	/* widget controller */
 	var c = this;
 
@@ -14,10 +14,14 @@
 	c.apiVersion = undefined;
 	c.searchTerm = '';
 	c.hostName = c.data.servletUri;
+	c.showLoadingOverlay = true;
+
 
 
 	$scope.$on('sp_loading_indicator', function(e, value) {
-		c.loading = value;
+		if(c.showLoadingOverlay) {
+			c.loading = value;
+		}
 	});
 
 	c.openNav = function(){
@@ -25,14 +29,23 @@
 		spUtil.scrollTo('.navbar-header', 1000);
 	};
 
+	$mdSidenav('left-nav', true).then(function(instance) {
+		// On close callback to handle close, backdrop click, or escape key pressed.
+		// Callback happens BEFORE the close action occurs.
+		instance.onClose(function() {
+			console.log(angular.element('section.page')[0]);
+			$timeout(function () {
+				angular.element('section.page')[0].scrollBy(0, 0.1);
+			}, 100);
+		});
+	});
+
 
 	c.closeNav = function(dataObj){
+		console.log('Hellow World Testing');
 		$mdSidenav('left-nav', true).close().then(function() {
-			angular.element('section.page')[0].scroll(0, 0.1);
+			angular.element('section.page')[0].scrollBy(0, 0.1);
 		});
-		/*$timeout(function() {
-			angular.element('section.page')[0].scroll(0, 0.1);
-		}, 500);*/
 
 		if(dataObj && c.apiResource!=''){
 			dataObj.endpointUrl = c.hostName + 'api' + c.apiResource.split('###')[1];
@@ -140,14 +153,17 @@
 	};
 
 	c.loadNamespaces = function() {
+		c.showLoadingOverlay = false;
 		return c.server.get({
 			action: 'getNamespaces'
 		}).then(function(resp){
 			c.namespaces = resp.data.namespaces;
+			c.showLoadingOverlay = true;
 		});
 	};
 
 	c.loadApiNames = function(ns) {
+		c.showLoadingOverlay = false;
 		c.apiName = '';
 		c.apiVersion = '';
 		return c.server.get({
@@ -155,16 +171,19 @@
 			namespace: ns
 		}).then(function(resp) {
 			c.apiNames = JSON.parse(resp.data.apiNames);
+			c.showLoadingOverlay = true;
 		});
 	};
 
 	c.loadApiDetails = function(selectedResource) {
+		c.showLoadingOverlay = false;
 		return c.server.get({
 			action: 'getApiDetails',
 			method: c.apiResource.split('###')[0],
 			resource: c.apiResource.split('###')[1]
 		}).then(function(resp){
 			c.apiDetails = resp.data.apiDetails;
+			c.showLoadingOverlay = true;
 		});
 	};
 
@@ -292,77 +311,78 @@ md-ink-bar {
         <roles/>
         <script><![CDATA[(function() {
 
-	var basicAuthProfileSysID = gs.getProperty('x_792082_mailman.mailman.basic_auth_profile.sys_id');
-	data.servletUri = gs.getProperty('glide.servlet.uri');
+    var basicAuthProfileSysID = gs.getProperty('x_792082_mailman.mailman.basic_auth_profile.sys_id');
+    data.servletUri = gs.getProperty('glide.servlet.uri');
 
-	if(input) {
-		var errorMessage = ''
-		if(input.action == 'getNamespaces'){
-			try {
-				var nsRestMessage = new sn_ws.RESTMessageV2();
-				nsRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
-				nsRestMessage.setHttpMethod("get");
-				nsRestMessage.setEndpoint(data.servletUri + "api/now/doc/namespaces");
-				var nsResponse = nsRestMessage.execute();
-				var nsResponseBody = nsResponse.getBody();
-				var nsHttpStatus = nsResponse.getStatusCode();
-				if(nsHttpStatus == 200) {
-					var nsObj = JSON.parse(nsResponseBody);
-					data.namespaces = nsObj.result;
-				}
-			}
-			catch (ex) {
-				errorMessage = ex.message;
-			}
-		}
+    if (input) {
+        var errorMessage = '';
+        if (input.action == 'getNamespaces') {
+            try {
+                var nsRestMessage = new sn_ws.RESTMessageV2();
+                nsRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
+                nsRestMessage.setHttpMethod("get");
+                nsRestMessage.setEndpoint(data.servletUri + "api/now/doc/namespaces");
+                var nsResponse = nsRestMessage.execute();
+                var nsResponseBody = nsResponse.getBody();
+                var nsHttpStatus = nsResponse.getStatusCode();
+                if (nsHttpStatus == 200) {
+                    var nsObj = JSON.parse(nsResponseBody);
+                    data.namespaces = nsObj.result;
+                }
+            } catch (ex) {
+                errorMessage = ex.message;
+            }
+        }
 
-		if(input.action == "getApiNames") {
-			try {
-				var apiNameRestMessage = new sn_ws.RESTMessageV2();
-				apiNameRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
-				apiNameRestMessage.setHttpMethod("get");
-				apiNameRestMessage.setEndpoint(data.servletUri + "api/now/doc/services?namespace="+input.namespace);
-				var apiNameResponse = apiNameRestMessage.execute();
-				var apiNameResponseBody = apiNameResponse.getBody();
-				var apiNameHttpStatus = apiNameResponse.getStatusCode();
-				if(apiNameHttpStatus == 200) {
-					var anObj = JSON.parse(apiNameResponseBody)['result'][input.namespace];
+        if (input.action == "getApiNames") {
+            try {
+                var apiNameRestMessage = new sn_ws.RESTMessageV2();
+                apiNameRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
+                apiNameRestMessage.setHttpMethod("get");
+                apiNameRestMessage.setEndpoint(data.servletUri + "api/now/doc/services?namespace=" + input.namespace);
+                var apiNameResponse = apiNameRestMessage.execute();
+                var apiNameResponseBody = apiNameResponse.getBody();
+                var apiNameHttpStatus = apiNameResponse.getStatusCode();
+                if (apiNameHttpStatus == 200) {
+                    var anObj = JSON.parse(apiNameResponseBody)['result'][input.namespace];
 
-					// Sort API Names alphabetically
-					var anObjSorted = Object.keys(anObj).sort().reduce(function (obj, key) {
-						obj[key] = anObj[key];
-						return obj;
-					}, {});
+                    // Sort API Names alphabetically
+                    var anObjSorted = Object.keys(anObj).sort().reduce(function(obj, key) {
+                        obj[key] = anObj[key];
+                        return obj;
+                    }, {});
 
-					// Need to stringfy, otherwise the alphabetical sort is getting lost, don't know why though
-					// Will parse it in client script
-					data.apiNames = JSON.stringify(anObjSorted, null, 4);
-				}
-			}
-			catch (ex) {
-				errorMessage = ex.message;
-			}
-		}
+                    // Need to stringfy, otherwise the alphabetical sort is getting lost, don't know why though
+                    // Will parse it in client script
+                    data.apiNames = JSON.stringify(anObjSorted, null, 4);
+                }
+            } catch (ex) {
+                errorMessage = ex.message;
+            }
+        }
 
-		if(input.action == 'getApiDetails'){
-			try {
-				var apiDetailsRestMessage = new sn_ws.RESTMessageV2();
-				apiDetailsRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
-				apiDetailsRestMessage.setHttpMethod("get");
-				apiDetailsRestMessage.setEndpoint(data.servletUri + "api/now/doc/" + input.method + "?route=" + encodeURIComponent(input.resource));
-				var apiDetailsResponse = apiDetailsRestMessage.execute();
-				var apiDetailsResponseBody = apiDetailsResponse.getBody();
-				var apiDetailsHttpStatus = apiDetailsResponse.getStatusCode();
-				if(apiDetailsHttpStatus == 200) {
-					data.apiDetails = JSON.parse(apiDetailsResponseBody).result;
-				}
-			}
-			catch (ex) {
-				errorMessage = ex.message;
-			}
-		}
+        if (input.action == 'getApiDetails') {
+            try {
+                var apiDetailsRestMessage = new sn_ws.RESTMessageV2();
+                apiDetailsRestMessage.setAuthenticationProfile('basic', basicAuthProfileSysID);
+                apiDetailsRestMessage.setHttpMethod("get");
+                apiDetailsRestMessage.setEndpoint(data.servletUri + "api/now/doc/" + input.method + "?route=" + encodeURIComponent(input.resource));
+                var apiDetailsResponse = apiDetailsRestMessage.execute();
+                var apiDetailsResponseBody = apiDetailsResponse.getBody();
+                var apiDetailsHttpStatus = apiDetailsResponse.getStatusCode();
+                if (apiDetailsHttpStatus == 200) {
+                    data.apiDetails = JSON.parse(apiDetailsResponseBody).result;
+                }
+            } catch (ex) {
+                errorMessage = ex.message;
+            }
+        }
 
-	}
+        if (errorMessage) {
+            gs.addErrorMessage(errorMessage);
+        }
+
+    }
 
 
 })();]]></script>
@@ -371,14 +391,14 @@ md-ink-bar {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:25:23</sys_created_on>
         <sys_id>1f1768d597ce311056e8b3e6f053af54</sys_id>
-        <sys_mod_count>231</sys_mod_count>
+        <sys_mod_count>245</sys_mod_count>
         <sys_name>Mailman Body New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_1f1768d597ce311056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-12-10 19:32:12</sys_updated_on>
+        <sys_updated_on>2023-12-16 03:26:57</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">

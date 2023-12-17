@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller = function($scope, spUtil, spModal, $timeout, $mdToast, $mdSidenav) {
+        <client_script><![CDATA[api.controller = function($scope, spUtil, spModal, $timeout, $mdToast, $mdSidenav, $mdDialog) {
 	/* widget controller */
 	var c = this;
 	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
@@ -107,6 +107,7 @@
 				c.data.responseBody.value = resp.data.responseBody;
 				c.data.statusFlag = resp.data.statusFlag;
 				c.data.httpStatus = resp.data.httpStatus;
+				c.data.responseTime = resp.data.responseTime;
 				spUtil.scrollTo('#response-body', 2000);
 			});
 		}
@@ -161,39 +162,68 @@
 		}
 	};
 
-	c.openJCModal = function(respObj) {
-		spModal.confirm("Response Body will be sent to external site to render graphical view.<br>Do you want to proceed?").then(function(confirmed) {
-			if (confirmed) {
-				spModal.open({
-					title: 'Diagram View',
-					widget: 'json_crack',
-					widgetInput: {
-						'obj': respObj
-					},
-					size: 'lg',
-					buttons: [{
-						label: '${Ok}',
-						primary: true
-					}],
-					headerStyle: {
-						'background': '#00539C',
-						'color': 'white',
-						'border-top-left-radius': '5px',
-						'border-top-right-radius': '5px'
-					}
-				}).then(function(answer) {
+	c.openJCModal = function(ev, respObj) {
 
-				});
+		$mdDialog.show({
+			controller: DialogController,
+			controllerAs: 'c',
+			template: 
+			'<md-dialog class="dialog-no-shadow">' +
+			'	<md-dialog-content class="md-dialog-content">' +
+			'		<h2 class="md-headline">Do you want to open Diagram View?</h2>' +
+			'		<div class="md-dialog-content md-subhead no-left-padding"><b>Caution:</b> This will send the data object to a third-party/external system (JSONCrack).</div>' +
+			'	</md-dialog-content>' +
+			'	<md-dialog-actions>' +
+			'		<md-button ng-click="c.cancel()" class="md-warn dialog-button-no-shadow">' +
+			'   	Cancel' +
+			'		</md-button>' +
+			'		<md-button ng-click="c.hide()" class="md-primary md-raised dialog-button-no-shadow">' +
+			'			Proceed' +
+			'		</md-button>' +
+			'	</md-dialog-actions>' +
+			'</md-dialog>'+
+			'<style>'+
+			'	.dialog-no-shadow:focus {border: none !important; box-shadow: 0 7px 8px -4px rgba(0,0,0,.2),0 13px 19px 2px rgba(0,0,0,.14),0 5px 24px 4px rgba(0,0,0,.12) !important;}'+
+			'	.dialog-button-no-shadow:focus {border: none !important; box-shadow: none !important;}' +
+			'	.no-left-padding {padding-left: 0 !important;}' +
+			'</style>',
+			parent: angular.element(document.body),
+			targetEvent: ev
+		}).then(function () {
+			spModal.open({
+				title: 'Diagram View',
+				widget: 'json_crack',
+				widgetInput: {
+					'obj': respObj
+				},
+				size: 'lg',
+				//noDismiss: true,
+				buttons: [{
+					label: '${Ok}',
+					primary: true
+				}],
+				headerStyle: {
+					'background': '#3f51b5',
+					'color': 'white',
+					'border-top-left-radius': '5px',
+					'border-top-right-radius': '5px'
+				}
+			});
 
-				$timeout(function() {
-					angular.element('button.close.pull-right').remove();
-				}, 800);
-			}
+		}, function () {
+			// Cancel button clicked
 		});
 
-		$timeout(function() {
-			angular.element('button.close.pull-right').remove();
-		}, 100);
+		function DialogController($mdDialog) {
+			this.hide = function () {
+				$mdDialog.hide();
+			};
+
+			this.cancel = function () {
+				$mdDialog.cancel();
+			};
+
+		}
 
 	};
 
@@ -216,16 +246,28 @@
   margin-bottom: 20px;
 }
 
-input:focus, button:focus {
+input:focus, button:focus, md-chips-wrap {
   box-shadow: none !important;
 }
 
-.remove-shadow:focus {
-  border: none !important; box-shadow: none !important;
+.remove-shadow:focus, md-chips-wrap:focus, md-dialog-content {
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .layout-row {
   gap: 10px;
+}  
+
+.filler-icon {
+  display: flex;
+  background: lightgray;
+  min-width: 54.06px;
+  max-width: 54.06px;
+}
+
+.filler-icon &gt; md-icon {
+  color: $brand-primary !important;
 }
 
 .align-pwd-icon {
@@ -596,77 +638,86 @@ pre.CodeMirror-line {
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
-    /* populate the 'data' object */
-    /* e.g., data.table = $sp.getValue('table'); */
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
 
-    if (!input) {
-        data.headersNew = [{
-            "key": "Content-Type",
-            "value": "application/json",
-            "editingKey": false,
-            "editingValue": false
-        }, {
-            "key": "Accept",
-            "value": "application/json",
-            "editingKey": false,
-            "editingValue": false
-        }];
+	if (!input) {
+		data.headersNew = [{
+			"key": "Content-Type",
+			"value": "application/json",
+			"editingKey": false,
+			"editingValue": false
+		}, {
+			"key": "Accept",
+			"value": "application/json",
+			"editingKey": false,
+			"editingValue": false
+		}];
 
-        data.responseBody = {
-            "value": JSON.stringify({}, null, 4)
-        };
+		data.responseBody = {
+			"value": JSON.stringify({}, null, 4)
+		};
 
-        data.requestBody = {
-            "value": JSON.stringify({}, null, 4)
-        };
-    } else {
+		data.requestBody = {
+			"value": JSON.stringify({}, null, 4)
+		};
+	} else {
 
-        if (input.preloadsaveddata == 'true') {
-            data.methodName = input.methodname;
-            data.endpointUrl = input.endpointurl;
-            data.headersNew = input.headersnew;
-            data.requestBody = input.requestbody;
-            data.responseBody = input.responsebody;
-            data.statusFlag = input.statusflag;
-            data.httpStatus = input.httpstatus;
-        }
-        // data.responseBody = {
-        //     "value": JSON.stringify({}, null, 4)
-        // };
-    }
+		if (input.preloadsaveddata == 'true') {
+			data.methodName = input.methodname;
+			data.endpointUrl = input.endpointurl;
+			data.headersNew = input.headersnew;
+			data.requestBody = input.requestbody;
+			data.responseBody = input.responsebody;
+			data.statusFlag = input.statusflag;
+			data.httpStatus = input.httpstatus;
+		}
+	}
 
-    if (input && input.action == 'sendMessage') {
-        try {
-            var r = new sn_ws.RESTMessageV2();
-            r.setEndpoint(input.endpoint);
-            r.setHttpMethod(input.method);
-            for (var key in input.headers) {
-                r.setRequestHeader(key, input.headers[key]);
-            }
+	if (input && input.action == 'sendMessage') {
 
-            if (input.body) {
-                r.setRequestBody(input.body);
-            }
+		var startTime, endTime;
+		try {
 
-            var response = r.execute();
-            data.httpStatus = response.getStatusCode();
+			startTime = new GlideDateTime().getNumericValue();
 
-            if (data.httpStatus >= 200 && data.httpStatus <= 299)
-                data.statusFlag = true;
-            else
-                data.statusFlag = false;
+			var r = new sn_ws.RESTMessageV2();
+			r.setEndpoint(input.endpoint);
+			r.setHttpMethod(input.method);
+			for (var key in input.headers) {
+				r.setRequestHeader(key, input.headers[key]);
+			}
 
-            try {
-                data.responseBody = JSON.stringify(JSON.parse(response.getBody()), null, 4);
-            } catch (e) {
-                data.responseBody = response.getBody();
-            }
+			if (input.body) {
+				r.setRequestBody(input.body);
+			}
 
-        } catch (ex) {
-            data.output = ex;
-            gs.addErrorMessage(data.output);
-        }
-    }
+			var response = r.execute();
+			endTime = new GlideDateTime().getNumericValue();
+			data.httpStatus = response.getStatusCode();
+
+			if (data.httpStatus >= 200 && data.httpStatus <= 299)
+				data.statusFlag = true;
+			else
+				data.statusFlag = false;
+
+			try {
+				data.responseBody = JSON.stringify(JSON.parse(response.getBody()), null, 4);
+			} catch (e) {
+				data.responseBody = response.getBody();
+			}
+
+			data.responseTime = endTime - startTime;
+
+		} catch (ex) {
+			data.output = ex;
+			gs.addErrorMessage(data.output);
+			if(!endTime){
+				endTime = new GlideDateTime().getNumericValue();
+				data.responseTime = endTime - startTIme;
+			}
+		}
+	}
 
 })();]]></script>
         <servicenow>false</servicenow>
@@ -674,20 +725,18 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>229</sys_mod_count>
+        <sys_mod_count>287</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-12-08 20:00:08</sys_updated_on>
+        <sys_updated_on>2023-12-17 13:15:14</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet"/>
-
-
 
 <div id="mm-widget-container">
 
@@ -721,8 +770,13 @@ pre.CodeMirror-line {
     <div id="auth-header" layout="column" layout-gt-sm="row" class="margin-8-column-16">
       <md-content id="auth-panel" md-whiteframe="4" flex>
         <md-toolbar class="md-hue-2">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Authorization</h2>
+          <div layout="row">
+            <md-toolbar-filler class="filler-icon">
+              <md-icon>vpn_key</md-icon>
+            </md-toolbar-filler>
+            <div class="md-toolbar-tools">
+              <h2 flex md-truncate>Authorization</h2>
+            </div>
           </div>
         </md-toolbar>
 
@@ -800,8 +854,13 @@ pre.CodeMirror-line {
 
       <md-content id="request-headers" md-whiteframe="4" flex>
         <md-toolbar class="md-hue-2">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Request Headers</h2>
+          <div layout="row">
+            <md-toolbar-filler class="filler-icon">
+              <md-icon>toc</md-icon>
+            </md-toolbar-filler>
+            <div class="md-toolbar-tools">
+              <h2 flex md-truncate>Request Headers</h2>
+            </div>
           </div>
         </md-toolbar>
 
@@ -860,17 +919,22 @@ pre.CodeMirror-line {
     <div id="req-resp-body" layout="column" layout-gt-sm="row" class="margin-8-column-16">
       <md-content id="request-body" md-whiteframe="4" flex>
         <md-toolbar class="md-hue-2">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Request Body</h2>
-            <md-button ng-click="c.toggleLineWrap($event, 'req')" class="md-icon-button">
-              <md-icon>wrap_text</md-icon>
-            </md-button>
-            <md-button ng-click="c.copy(c.data.requestBody.value, 'req')" class="md-icon-button">
-              <md-icon>content_copy</md-icon>
-            </md-button>
-            <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.requestBody.value)" ng-if="c.data.requestBody.value != '' && c.data.requestBody.value != '{}'">
-              <md-icon>code</md-icon>
-            </md-button>
+          <div layout="row">
+            <md-toolbar-filler class="filler-icon">
+              <md-icon>call_made</md-icon>
+            </md-toolbar-filler>
+            <div class="md-toolbar-tools">
+              <h2 flex md-truncate>Request Body</h2>
+              <md-button ng-click="c.toggleLineWrap($event, 'req')" class="md-icon-button">
+                <md-icon>wrap_text</md-icon>
+              </md-button>
+              <md-button ng-click="c.copy(c.data.requestBody.value, 'req')" class="md-icon-button">
+                <md-icon>content_copy</md-icon>
+              </md-button>
+              <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.requestBody.value)" ng-if="c.data.requestBody.value != '' && c.data.requestBody.value != '{}'">
+                <md-icon>code</md-icon>
+              </md-button>
+            </div>
           </div>
         </md-toolbar>
 
@@ -882,17 +946,25 @@ pre.CodeMirror-line {
 
       <md-content id="response-body" md-whiteframe="4" flex>
         <md-toolbar ng-class="{'md-primary md-hue-2': c.data.statusFlag==undefined, 'md-accent md-hue-2': c.data.statusFlag==true, 'md-warn md-hue-2': c.data.statusFlag==false}">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span></h2>
-            <md-button ng-click="c.toggleLineWrap($event, 'resp')" class="md-icon-button">
-              <md-icon>wrap_text</md-icon>
-            </md-button>
-            <md-button class="md-icon-button" ng-click="c.copy(c.data.responseBody.value, 'resp')">
-              <md-icon>content_copy</md-icon>
-            </md-button>
-            <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.responseBody.value)" ng-if="c.data.responseBody.value != '' && c.data.responseBody.value != '{}'">
-              <md-icon>code</md-icon>
-            </md-button>
+          <div layout="row">
+            <md-toolbar-filler class="filler-icon">
+              <md-icon>call_received</md-icon>
+            </md-toolbar-filler>
+            <div class="md-toolbar-tools">
+              <h2 flex md-truncate>Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span></h2>
+              <md-chips id="response-time" ng-if="c.data.responseTime">
+                <md-chip>{{c.data.responseTime}} ms</md-chip>
+              </md-chips>
+              <md-button ng-click="c.toggleLineWrap($event, 'resp')" class="md-icon-button">
+                <md-icon>wrap_text</md-icon>
+              </md-button>
+              <md-button class="md-icon-button" ng-click="c.copy(c.data.responseBody.value, 'resp')">
+                <md-icon>content_copy</md-icon>
+              </md-button>
+              <md-button class="md-icon-button" ng-click="c.openJCModal($event, c.data.responseBody.value)" ng-if="c.data.responseBody.value != '' && c.data.responseBody.value != '{}'">
+                <md-icon>code</md-icon>
+              </md-button>
+            </div>
           </div>
         </md-toolbar>
 
@@ -903,224 +975,6 @@ pre.CodeMirror-line {
       </md-content>
     </div>
   </div>
-</div>
-
-
-
-<!--<div id="mm-widget-container">
-  <div class="row123" id="endpoint-input">
-    <form name="inputForm">
-      <div layout="row" class="margin-left-right-6">
-        <md-input-container class="no-bottom-margin" flex="20">
-          <label>Method</label>
-          <md-select class="remove-shadow" ng-init="c.data.methodName = c.data.methodName || 'GET'" ng-model="c.data.methodName">
-            <md-option style="border: none !important; box-shadow: none !important;" value="GET">GET</md-option>
-            <md-option style="border: none !important; box-shadow: none !important;" value="POST">POST</md-option>
-            <md-option style="border: none !important; box-shadow: none !important;" value="PUT">PUT</md-option>
-            <md-option style="border: none !important; box-shadow: none !important;" value="PATCH">PATCH</md-option>
-            <md-option style="border: none !important; box-shadow: none !important;" value="DELETE">DELETE</md-option>
-          </md-select>
-        </md-input-container>
-        <md-input-container class="no-bottom-margin" flex="80">
-          <label>URL</label>
-          <input id="urlInput" name="urlInput" ng-model="c.data.endpointUrl" ng-pattern="c.regex" ng-required="true" />
-        </md-input-container>
-        <div class="text-center">
-          <md-button class="md-fab md-mini md-primary" ng-disabled="inputForm.urlInput.$invalid" type="submit" ng-click="c.submit()">
-            <md-icon>send</md-icon>
-          </md-button>
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <div id="body-2" layout="column">
-    <div id="auth-header" layout="column" layout-gt-sm="row" class="margin-8-column-16">
-      <md-content id="auth-panel" md-whiteframe="4" flex>
-        <md-toolbar class="md-hue-2">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Authorization</h2>
-          </div>
-        </md-toolbar>
-
-        <md-content flex="column" class="inset">
-          <md-input-container id="authTypeId" flex class="md-block">
-            <label for="authType">Type</label>
-            <md-select id="authType" class="remove-shadow" ng-init="c.authType='none'" ng-model="c.authType">
-              <md-option style="border: none !important; box-shadow: none !important;" value="none">No Auth</md-option>
-              <md-option style="border: none !important; box-shadow: none !important;" value="basic">Basic Auth</md-option>
-              <md-option style="border: none !important; box-shadow: none !important;" value="bearer">Bearer</md-option>
-              <md-option style="border: none !important; box-shadow: none !important;" value="apikey-header">API Key (in Header)</md-option>
-              <md-option style="border: none !important; box-shadow: none !important;" value="apikey-queryparams">API Key (in Query Params)</md-option>
-            </md-select>
-          </md-input-container>
-
-          <md-content layout="column" layout-align="center center" id="no-auth-group" ng-if="c.authType=='none'" layout-margin layout-padding layout-fill>
-            <span>${No authorization required.}</span>
-          </md-content>
-
-          <md-content layout="column" id="basic-auth-group" ng-if="c.authType=='basic'">
-            <md-input-container>
-              <label for="username">Username</label>
-              <input type="text" id="username" ng-model="c.username" />
-            </md-input-container>
-
-            <md-content layout="row">
-              <md-input-container flex>
-                <label for="pwd">Password</label>
-                <input type="{{c.passInputType}}" id="pwd" ng-model="c.password"/>
-              </md-input-container>
-              <md-input-container>
-                <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
-                  <md-icon ng-if="c.showPassword">visibility</md-icon>
-                  <md-icon ng-if="!c.showPassword">visibility_off</md-icon>
-                </md-button>
-              </md-input-container>
-            </md-content>
-
-          </md-content>
-
-          <md-content layout="row" id="bearer-auth-group" ng-if="c.authType=='bearer'">
-            <md-input-container flex>
-              <label for="token">Token</label>
-              <input type="{{c.passInputType}}" id="token" ng-model="c.token" />
-            </md-input-container>
-            <md-input-container>
-              <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
-                <md-icon ng-if="c.showPassword" class="material-icons">visibility</md-icon>
-                <md-icon ng-if="!c.showPassword" class="material-icons">visibility_off</md-icon>
-              </md-button>
-            </md-input-container>
-          </md-content>
-
-          <md-content layout="column" id="apikey-auth-group" ng-if="c.authType=='apikey-header' || c.authType=='apikey-queryparams'">
-            <md-input-container>
-              <label for="keyName">Key</label>
-              <input type="text" id="keyName" ng-model="c.keyName" />
-            </md-input-container>
-
-            <md-content layout="row">
-              <md-input-container flex>
-                <label for="keyValue">Value</label>
-                <input type="{{c.passInputType}}" id="keyValue" ng-model="c.keyValue" />
-              </md-input-container>
-              <md-input-container>
-                <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
-                  <md-icon ng-if="c.showPassword">visibility</md-icon>
-                  <md-icon ng-if="!c.showPassword">visibility_off</md-icon>
-                </md-button>
-              </md-input-container>
-            </md-content>
-          </md-content>
-        </md-content>
-      </md-content>
-
-      <md-content id="request-headers" md-whiteframe="4" flex>
-        <md-toolbar class="md-hue-2">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Request Headers</h2>
-          </div>
-        </md-toolbar>
-
-        <md-content flex="column" class="inset">
-          <table id="request-header-table" class="table no-bottom-margin" width="100%">
-            <thead>
-              <tr>
-                <th width="30%">Key</th>
-                <th width="50%">Value</th>
-                <th width="20%" class="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat="item in c.data.headersNew">
-                <td width="30%" class="vertical-middle" ng-class="{'bg-edit': item.editingKey}">
-                  <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">
-                    {{item.key}}
-                  </span>
-                  <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
-                </td>
-                <td width="50%" class="vertical-middle" ng-class="{'bg-edit': item.editingValue}">
-                  <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">
-                    {{item.value}}
-                  </span>
-                  <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')" />
-                </td>
-                <td width="20%" class="text-center vertical-middle">
-                  <md-button class="md-icon-button md-warn md-hue-2" ng-click="c.removeHeader(item, $index)">
-                    <md-icon>highlight_off</md-icon>
-                  </md-button>
-                </td>
-              </tr>
-              <tr>
-                <td width="30%" class="vertical-middle no-left-right-padding">
-                  <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
-                    <input id="inputKey" type="text" ng-model="c.headerKey" placeholder="Key" />
-                  </md-input-container>
-                </td>
-                <td width="50%" class="vertical-middle">
-                  <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
-                    <input id="inputValue" type="text" ng-model="c.headerValue" placeholder="Value" />
-                  </md-input-container>
-                </td>
-                <td width="20%" class="text-center vertical-middle">
-                  <md-button class="md-icon-button md-accent md-hue-3 top-margin-neg-20" ng-click="c.addHeader()">
-                    <md-icon>add_circle_outline</md-icon>
-                  </md-button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </md-content>
-      </md-content>
-    </div>
-
-    <div id="req-resp-body" layout="column" layout-gt-sm="row" class="margin-8-column-16">
-      <md-content id="request-body" md-whiteframe="4" flex>
-        <md-toolbar class="md-hue-2">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Request Body</h2>
-            <md-button ng-click="c.toggleLineWrap($event, 'req')" class="md-icon-button">
-              <md-icon>wrap_text</md-icon>
-            </md-button>
-            <md-button ng-click="c.copy(c.data.requestBody.value, 'req')" class="md-icon-button">
-              <md-icon>content_copy</md-icon>
-            </md-button>
-            <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.requestBody.value)" ng-if="c.data.requestBody.value != '' && c.data.requestBody.value != '{}'">
-              <md-icon>code</md-icon>
-            </md-button>
-          </div>
-        </md-toolbar>
-
-        <md-content flex="column">
-          <textarea class="form-control" ng-model="c.data.requestBody.value" ng-if="c.isMobile"></textarea>
-          <sp-script-editor id="editor" field="c.data.requestBody" data-length="4000" sn-disabled="false" sn-widget-scope-js-level="traditional" sn-server-side="false" ng-if="!c.isMobile" />
-        </md-content>
-      </md-content>
-
-      <md-content id="response-body" md-whiteframe="4" flex>
-        <md-toolbar ng-class="{'md-primary md-hue-2': c.data.statusFlag==undefined, 'md-accent md-hue-2': c.data.statusFlag==true, 'md-warn md-hue-2': c.data.statusFlag==false}">
-          <div class="md-toolbar-tools">
-            <h2 flex md-truncate>Response Body <span ng-if="c.data.httpStatus != undefined"> - {{c.data.httpStatus}}</span></h2>
-            <md-button ng-click="c.toggleLineWrap($event, 'resp')" class="md-icon-button">
-              <md-icon>wrap_text</md-icon>
-            </md-button>
-            <md-button class="md-icon-button" ng-click="c.copy(c.data.responseBody.value, 'resp')">
-              <md-icon>content_copy</md-icon>
-            </md-button>
-            <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.responseBody.value)" ng-if="c.data.responseBody.value != '' && c.data.responseBody.value != '{}'">
-              <md-icon>code</md-icon>
-            </md-button>
-          </div>
-        </md-toolbar>
-
-        <md-content flex="column">
-          <sp-script-editor id="editor" field="c.data.responseBody" data-length="4000" class="form-control" sn-disabled="true" sn-widget-scope-js-level="traditional" sn-server-side="false" />-->
-<!--<sp-html-editor id="editor" field="c.data.responseBody" data-length="4000" class="form-control" sn-disabled="true"/>-->
-<!--</md-content>
-      </md-content>
-
-    </div>
-  </div>
-</div> -->]]></template>
+</div>]]></template>
     </sp_widget>
 </record_update>
