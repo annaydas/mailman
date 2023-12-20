@@ -2,17 +2,22 @@
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
         <client_script><![CDATA[api.controller = function($window) {
-    /* widget controller */
-    var c = this;
-    //var jsonCrackEmbed = document.querySelector("iframe");
-    var jsonCrackEmbed = angular.element("iframe")[0];
-    var json = JSON.stringify(c.data.jsonInput);
-
-    $window.addEventListener("message", function(event) {
-        jsonCrackEmbed.contentWindow.postMessage({
-            json: json
-        }, "*");
-    });
+	/* widget controller */
+	var c = this;
+	//var jsonCrackEmbed = document.querySelector("iframe");
+	var jsonCrackEmbed = angular.element("iframe")[0];
+	var json = JSON.stringify(c.data.jsonInput);
+	var options = {
+		theme: c.data.theme, // "light" or "dark"
+		direction: c.data.direction // "UP", "DOWN", "LEFT", "RIGHT"
+	};
+	
+	$window.addEventListener("message", function(event) {
+		jsonCrackEmbed.contentWindow.postMessage({
+			json: json,
+			options: options
+		}, "*");
+	});
 
 };]]></client_script>
         <controller_as>c</controller_as>
@@ -31,12 +36,14 @@
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
-    /* populate the 'data' object */
-    /* e.g., data.table = $sp.getValue('table'); */
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
 
-    if (input) {
-        data.jsonInput = JSON.parse(input.obj);
-    }
+	if (input) {
+		data.jsonInput = JSON.parse(input.obj);
+		data.theme = input.theme || 'dark';
+		data.direction = input.direction || 'RIGHT';
+	}
 
 })();]]></script>
         <servicenow>false</servicenow>
@@ -44,14 +51,14 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-07-06 11:05:56</sys_created_on>
         <sys_id>6a6080fa9733611056e8b3e6f053af76</sys_id>
-        <sys_mod_count>25</sys_mod_count>
+        <sys_mod_count>29</sys_mod_count>
         <sys_name>JSON Crack</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_6a6080fa9733611056e8b3e6f053af76</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-12-17 12:59:06</sys_updated_on>
+        <sys_updated_on>2023-12-20 14:02:38</sys_updated_on>
         <template><![CDATA[<div>
   <iframe 
           id="jsoncrackEmbed"

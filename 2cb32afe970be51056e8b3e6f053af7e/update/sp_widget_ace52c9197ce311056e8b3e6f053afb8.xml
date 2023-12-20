@@ -52,24 +52,14 @@
 
 	c.toggleLineWrap = function(event, elem) {
 
-		//console.log(event);
-		var element1 = angular.element(event.currentTarget);
-		var parentTD1 = angular.element(element1).parent();
-		var parentT2 = angular.element(parentTD1).parent();
-		var parent3 = angular.element(parentT2).parent();
-		//console.log(parent3[0]);
-		//console.log(parent3[0].children[1]);
-		//console.log(parent3[0].children[1].children[1]);
-		//console.log(parent3[0].children[1].children[1].CodeMirror);
-		//console.log(parent3[0].children[1].children[1].CodeMirror.setOption('lineWrapping', true));
-
 		if (elem == 'req') {
 			c.isReqWrapped = !c.isReqWrapped;
-			parent3[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isReqWrapped);
+			angular.element('md-content#request-body')[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isReqWrapped);
 		} else if (elem == 'resp') {
 			c.isRespWrapped = !c.isRespWrapped;
-			parent3[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isRespWrapped);
+			angular.element('md-content#response-body')[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isRespWrapped);
 		}
+
 	}
 
 	c.submit = function() {
@@ -188,13 +178,16 @@
 			'	.no-left-padding {padding-left: 0 !important;}' +
 			'</style>',
 			parent: angular.element(document.body),
-			targetEvent: ev
+			targetEvent: ev,
+			clickOutsideToClose: true
 		}).then(function () {
 			spModal.open({
 				title: 'Diagram View',
 				widget: 'json_crack',
 				widgetInput: {
-					'obj': respObj
+					'obj': respObj,
+					'theme': 'light',
+					'direction': 'RIGHT'
 				},
 				size: 'lg',
 				//noDismiss: true,
@@ -371,50 +364,6 @@ textarea {
   background: white;
   color: $brand-primary;
 }
-
-
-/* Small devices (tablets, 768px and up) 
-@media (max-width: 991px) {
-#request-body, #response-text,
-#reqHeader-panel, #auth-panel {
-padding-left: 0;
-padding-right: 0;
-}
-}*/
-
-/* Medium devices (desktops, 992px and up) 
-@media (min-width: 992px) {
-#request-body, #auth-panel {
-padding-left: 0;
-}
-
-#response-text, #reqHeader-panel {
-padding-right: 0;
-}
-
-#reqHeader-panel &gt; .panel &gt; .panel-body {
-height: 200px;
-overflow-y: auto;
-}
-
-#auth-panel &gt; .panel &gt; .panel-body {
-height: 255px;
-overflow-y: auto;
-display: flex;
-flex-direction: column;
-}*/
-
-/*
-#no-auth-group {
-height: 100%;
-display: flex;
-flex-direction: row;
-align-items: center;
-justify-content: center;
-}
-
-
-}*/
 
 .no-padding {
   padding: 0;
@@ -725,14 +674,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>287</sys_mod_count>
+        <sys_mod_count>299</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-12-17 13:15:14</sys_updated_on>
+        <sys_updated_on>2023-12-20 14:00:41</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
@@ -931,7 +880,7 @@ pre.CodeMirror-line {
               <md-button ng-click="c.copy(c.data.requestBody.value, 'req')" class="md-icon-button">
                 <md-icon>content_copy</md-icon>
               </md-button>
-              <md-button class="md-icon-button" ng-click="c.openJCModal(c.data.requestBody.value)" ng-if="c.data.requestBody.value != '' && c.data.requestBody.value != '{}'">
+              <md-button class="md-icon-button" ng-click="c.openJCModal($event, c.data.requestBody.value)" ng-if="c.data.requestBody.value != '' && c.data.requestBody.value != '{}'">
                 <md-icon>code</md-icon>
               </md-button>
             </div>
