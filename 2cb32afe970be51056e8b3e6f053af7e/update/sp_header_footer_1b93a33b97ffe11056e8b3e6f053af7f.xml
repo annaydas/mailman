@@ -6,22 +6,21 @@
   var c = this;
 }]]></client_script>
         <controller_as>c</controller_as>
-        <css>.sample-footer {
-  background-color: $brand-primary; 
-  color: #fed558; 
-  padding: 5px;
-  border-top: 5px solid #fed558;
-}
-
-
-.footer-col {
-  padding: 0 20px 0 20px;
-
-  h6 {
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-
+        <css>.sample-footer {&#13;
+  background-color: $brand-primary; &#13;
+  color: #fed558; &#13;
+  padding: 5px;&#13;
+  border-top: 5px solid #fed558;&#13;
+  font&#13;
+}&#13;
+&#13;
+.width-100 {&#13;
+  width: 100%;&#13;
+}&#13;
+&#13;
+.flex-style {&#13;
+  display: flex;&#13;
+  justify-content: space-between;&#13;
 }</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
@@ -45,28 +44,29 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-07-10 06:12:31</sys_created_on>
         <sys_id>1b93a33b97ffe11056e8b3e6f053af7f</sys_id>
-        <sys_mod_count>30</sys_mod_count>
+        <sys_mod_count>35</sys_mod_count>
         <sys_name>Mailman Footer</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_header_footer_1b93a33b97ffe11056e8b3e6f053af7f</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-01-08 09:53:50</sys_updated_on>
-        <template><![CDATA[<div class="sample-footer" role="contentinfo">	
-  <div class="container">
-    <div class="row flex-row items-center">
+        <sys_updated_on>2024-05-30 17:17:32</sys_updated_on>
+        <template><![CDATA[<div class="sample-footer">
+  <div class="container width-100">
+    <div class="flex-style">
 
-      <div class="col-xs-4 text-left footer-col">
-        <h6><strong>Mailman</strong> - REST Playground in ServiceNow</h6>
+      <div>
+        <h5><strong>Mailman</strong> - REST Playground in ServiceNow</h5>
       </div>
 
-      <div class="col-xs-8 text-right footer-col">
-        <h6><strong>Note:</strong> JSON Visualization requires sending data to an external system.</h6>
+      <div>
+        <h5><strong>Note:</strong> JSON Visualization requires sending data to an external system.</h5>
       </div> 
 
     </div>
   </div>
-</div>]]></template>
+</div>
+]]></template>
     </sp_header_footer>
 </record_update>

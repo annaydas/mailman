@@ -189,112 +189,116 @@
 
 };]]></client_script>
         <controller_as>c</controller_as>
-        <css>*:not(.glyphicon){
-  font-family: 'Ubuntu Mono', monospace;
-}
-
-@media (min-width: 600px) {
-  md-sidenav {
-    min-width: 450px;
-  }
-}
-
-.hello-123{
-  flex-grow: 1;
-}
-
-.header-text-wrap {
-  text-wrap: wrap;
-}
-
-.material-icons {
-  font-family: 'Material Icons';
-}
-
-md-icon.icon-center-align {
-  align-self: center;
-}
-
-md-icon.font-1 {
-  font-size: 1px; //Intentioanlly made Too small to be seen
-}
-
-.remove-shadow:focus {
-  border: none !important; box-shadow: none !important;
-}
-
-.loadingOverlay {
-  position: fixed;
-  top:0px;
-  right:0px;
-  width:100%;
-  height:100%;
-  z-index:10000000;
-  backdrop-filter: blur(2px) contrast(0.5);
-  opacity: 1;
-  transition: opacity 0.2s ease-out;
-}
-
-.progressCircle {
-  top: calc(50vh - 40px);
-  left: calc(50vw - 40px);
-}
-
-.loadingOverlay.ng-hide {
-  opacity: 0;
-}
-
-.padding-all-15 {
-  padding-top: 20px;
-}
-
-.font-red {
-  color: red !important;
-}
-
-.font-primary {
-  color: $brand-primary;
-}
-
-#new-req-btn {
-  position: fixed;
-  bottom: 50px;
-}
-
-#open-rest-explorer {
-  position: fixed;
-  bottom: 120px;
-}
-
-md-ink-bar {
-  background: $brand-primary;
-}
-
-.font-gray {
-  color: gray;
-}
-
-.font-large {
-  font-size: 1.7rem;
-  color: $brand-primary;
-}
-
-.remove-shadow:focus {
-  border: none;
-  box-shadow: none;
-}
-
-.mailman-tab-width{
-  min-width: 200px;
-}
-
-.md-sidenav-left:focus {
-  border: none;
-  box-shadow: none;
-}
-
-.margin-top-bottom-10 {
-  margin: 10px auto;
+        <css>*:not(.glyphicon){&#13;
+  font-family: 'Ubuntu Mono', monospace;&#13;
+}&#13;
+&#13;
+@media (min-width: 600px) {&#13;
+  md-sidenav {&#13;
+    min-width: 450px;&#13;
+  }&#13;
+}&#13;
+&#13;
+.hello-123{&#13;
+  flex-grow: 1;&#13;
+}&#13;
+&#13;
+.header-text-wrap {&#13;
+  text-wrap: wrap;&#13;
+}&#13;
+&#13;
+.material-icons {&#13;
+  font-family: 'Material Icons';&#13;
+}&#13;
+&#13;
+md-icon.icon-center-align {&#13;
+  align-self: center;&#13;
+}&#13;
+&#13;
+md-icon.font-1 {&#13;
+  font-size: 1px; //Intentioanlly made Too small to be seen&#13;
+}&#13;
+&#13;
+.remove-shadow:focus {&#13;
+  border: none !important; box-shadow: none !important;&#13;
+}&#13;
+&#13;
+.loadingOverlay {&#13;
+  position: fixed;&#13;
+  top:0px;&#13;
+  right:0px;&#13;
+  width:100%;&#13;
+  height:100%;&#13;
+  z-index:10000000;&#13;
+  backdrop-filter: blur(2px) contrast(0.5);&#13;
+  opacity: 1;&#13;
+  transition: opacity 0.2s ease-out;&#13;
+}&#13;
+&#13;
+.progressCircle {&#13;
+  top: calc(50vh - 40px);&#13;
+  left: calc(50vw - 40px);&#13;
+}&#13;
+&#13;
+.loadingOverlay.ng-hide {&#13;
+  opacity: 0;&#13;
+}&#13;
+&#13;
+.padding-all-15 {&#13;
+  padding-top: 20px;&#13;
+}&#13;
+&#13;
+.font-red {&#13;
+  color: red !important;&#13;
+}&#13;
+&#13;
+.font-primary {&#13;
+  color: $brand-primary;&#13;
+}&#13;
+&#13;
+md-tabs-wrapper {&#13;
+    margin: 0.8rem;&#13;
+}&#13;
+&#13;
+#new-req-btn {&#13;
+  position: fixed;&#13;
+  bottom: 50px;&#13;
+}&#13;
+&#13;
+#open-rest-explorer {&#13;
+  position: fixed;&#13;
+  bottom: 120px;&#13;
+}&#13;
+&#13;
+md-ink-bar {&#13;
+  background: $brand-primary;&#13;
+}&#13;
+&#13;
+.font-gray {&#13;
+  color: gray;&#13;
+}&#13;
+&#13;
+.font-large {&#13;
+  font-size: 1.7rem;&#13;
+  color: $brand-primary;&#13;
+}&#13;
+&#13;
+.remove-shadow:focus {&#13;
+  border: none;&#13;
+  box-shadow: none;&#13;
+}&#13;
+&#13;
+.mailman-tab-width{&#13;
+  min-width: 200px;&#13;
+}&#13;
+&#13;
+.md-sidenav-left:focus {&#13;
+  border: none;&#13;
+  box-shadow: none;&#13;
+}&#13;
+&#13;
+.margin-top-bottom-10 {&#13;
+  margin: 10px auto;&#13;
 }</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
@@ -391,14 +395,14 @@ md-ink-bar {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:25:23</sys_created_on>
         <sys_id>1f1768d597ce311056e8b3e6f053af54</sys_id>
-        <sys_mod_count>250</sys_mod_count>
+        <sys_mod_count>251</sys_mod_count>
         <sys_name>Mailman Body New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_1f1768d597ce311056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-01-08 09:44:05</sys_updated_on>
+        <sys_updated_on>2024-05-30 15:38:36</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
