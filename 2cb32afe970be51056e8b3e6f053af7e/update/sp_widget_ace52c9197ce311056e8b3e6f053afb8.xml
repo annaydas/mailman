@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller = function($scope, spUtil, spModal, $timeout, $mdToast, $mdSidenav, $mdDialog) {
+        <client_script><![CDATA[api.controller = function($scope, spUtil, spModal, $window, $timeout, $mdToast, $mdSidenav, $mdDialog) {
 	/* widget controller */
 	var c = this;
 	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
@@ -10,6 +10,13 @@
 	c.passInputType = 'password';
 	c.isRespWrapped = false;
 	c.isReqWrapped = false;
+
+	// Testing defaults
+	c.redirectUrl = 'https://dev267231.service-now.com/oauth_redirect.do';
+	c.authUrl = 'https://accounts.spotify.com/authorize';
+	c.clientId = 'e64417be1bfc4ff896338d23dbb515bb';
+	c.clientSecret = '91dccc0320a7430982fb3f08110493c7';
+	c.tokenUrl = 'https://accounts.spotify.com/api/token';
 
 	c.openToast = function(msg, type) {
 		var colour = (type === 'success') ? '#00E676' : '#F44336';
@@ -85,8 +92,6 @@
 				//do nothing
 			}
 
-
-
 			c.server.get({
 				action: 'sendMessage',
 				method: c.data.methodName,
@@ -103,30 +108,38 @@
 		}
 	};
 
-	c.addHeader = function() {
+	c.addHeader = function(headerKey, headerValue, manualInput) {
 
-		if (c.headerKey && c.headerValue) {
+		if (headerKey && headerValue) {
 
 			var found = false;
 			for (i = 0; i < c.data.headersNew.length; i++) {
-				if (c.data.headersNew[i].key == c.headerKey) {
+				if (c.data.headersNew[i].key == headerKey) {
 					found = true;
-					break;
+
+					if(headerKey == 'Authorization'){
+						c.data.headersNew[i].key = headerKey;
+						c.data.headersNew[i].value = headerValue;
+					} else {
+						break;
+					}
 				}
 			}
 
 			if (!found) {
 				// Push the new item to the headers array
 				c.data.headersNew.push({
-					"key": c.headerKey,
-					"value": c.headerValue,
+					"key": headerKey,
+					"value": headerValue,
 					"editingKey": false,
 					"editingValue": false
 				});
 
-				//Clear the TextBoxes.
-				c.headerKey = "";
-				c.headerValue = "";
+				if(manualInput){
+					//Clear the TextBoxes if manual input.
+					c.headerKey = "";
+					c.headerValue = "";
+				}
 			}
 		}
 
@@ -137,6 +150,84 @@
 		//Remove the item from Array using Index.
 		c.data.headersNew.splice(index, 1);
 
+	};
+
+	c.getToken = function (grantType) {
+
+		if (grantType == 'code') {
+			c.runAuthCodeFlow();
+		} else if (grantType == 'client_credentials') {
+			c.callTokenEndpoint();
+		} else if (grantType == 'password') {
+			c.callTokenEndpoint(null, null, c.username, c.password);
+		}
+
+
+	};
+
+	c.runAuthCodeFlow = function () {
+		c.authCode = '';
+		var fullAuthURL = new URL(c.authUrl);
+		fullAuthURL.searchParams.set('response_type', c.grantType);
+		fullAuthURL.searchParams.set('client_id', c.clientId);
+		fullAuthURL.searchParams.set('redirect_uri', c.redirectUrl);
+		fullAuthURL.searchParams.set('state', 'hello123');
+		var oauthWindow = $window.open(fullAuthURL);
+		checkForAuthCode(oauthWindow);
+
+		function checkForAuthCode(oauthWindow) {
+			try{
+				// Check if the URL contains the authorization code 
+				var urlParams = new URLSearchParams(oauthWindow.location.search); 
+				authCode = urlParams.get('code');
+				if(!authCode) {
+					$timeout(function() {
+						checkForAuthCode(oauthWindow);
+					}, 1000, true, oauthWindow);
+				} else {
+					oauthWindow.close();
+					c.authCode = authCode;
+					if (c.authCode){
+						c.callTokenEndpoint(c.authCode, c.redirectUrl);
+					} else {
+						console.log('Auth Code not found.')
+					}				
+				}
+			} catch (e) {
+				$timeout(function() {
+					checkForAuthCode(oauthWindow);
+				}, 1000, true, oauthWindow);
+			}
+		}
+	};
+
+	c.callTokenEndpoint= function (authCode, redirectUrl, username, password) {
+		var urlencoded = new URLSearchParams();
+		if(authCode) {urlencoded.append("code", authCode);}
+		if(redirectUrl) {urlencoded.append("redirect_uri", redirectUrl);}
+		if(username) {urlencoded.append("username", username);}
+		if(password) {urlencoded.append("password", password);}
+		urlencoded.append("client_id", c.clientId);
+		urlencoded.append("client_secret", c.clientSecret);
+		urlencoded.append("grant_type", c.grantType);
+		
+
+		c.server.get({
+			action: 'callTokenUrl',
+			token_url: c.tokenUrl,
+			requestBody: urlencoded.toString()
+		}).then(function(resp) {
+			c.data.access_token = resp.data.access_token;
+			c.data.refresh_token = resp.data.refresh_token;
+			c.data.token_type = resp.data.token_type;
+			c.data.expires_in = resp.data.expires_in;
+			c.useToken(c.data.access_token);
+		});
+	};
+
+	c.useToken = function (accessToken) {
+		accessToken = accessToken ? accessToken : c.data.access_token;
+		c.addHeader('Authorization', 'Bearer ' + accessToken, false);
 	};
 
 	c.copy = function(str, source) {
@@ -411,6 +502,10 @@ td
   height: 20px;
 }
 
+.max-height-250 {
+  max-height: 250px;
+}
+
 
 /* Scrollbar CSS */
 /* width */
@@ -668,20 +763,37 @@ pre.CodeMirror-line {
 		}
 	}
 
+	if(input && input.action == 'callTokenUrl') {
+		var tokenReq = new sn_ws.RESTMessageV2();
+		tokenReq.setEndpoint(input.token_url);
+		tokenReq.setHttpMethod('POST');
+		tokenReq.setRequestBody(input.requestBody);
+		tokenReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		var tokenResp = tokenReq.execute();
+		data.tokenRespStatus = tokenResp.getStatusCode();
+		if (data.tokenRespStatus >= 200 && data.tokenRespStatus <= 299){
+			var tokenRespBody = JSON.parse(tokenResp.getBody());
+			data.access_token = tokenRespBody.access_token;
+			data.refresh_token = tokenRespBody.refresh_token;
+			data.token_type = tokenRespBody.token_type;
+			data.expires_in = tokenRespBody.expires_in;
+		}
+	}
+
 })();]]></script>
         <servicenow>false</servicenow>
         <sys_class_name>sp_widget</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>299</sys_mod_count>
+        <sys_mod_count>368</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-12-20 14:00:41</sys_updated_on>
+        <sys_updated_on>2024-07-11 19:47:27</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
@@ -729,7 +841,7 @@ pre.CodeMirror-line {
           </div>
         </md-toolbar>
 
-        <md-content flex="column" class="inset">
+        <md-content id="auth-panel-content" flex="column" class="inset max-height-250">
           <md-input-container id="authTypeId" flex class="md-block">
             <label for="authType">Type</label>
             <md-select id="authType" class="remove-shadow" ng-init="c.authType='none'" ng-model="c.authType">
@@ -738,6 +850,7 @@ pre.CodeMirror-line {
               <md-option style="border: none !important; box-shadow: none !important;" value="bearer">Bearer</md-option>
               <md-option style="border: none !important; box-shadow: none !important;" value="apikey-header">API Key (in Header)</md-option>
               <md-option style="border: none !important; box-shadow: none !important;" value="apikey-queryparams">API Key (in Query Params)</md-option>
+              <md-option style="border: none !important; box-shadow: none !important;" value="oauth2">OAuth 2.0</md-option>
             </md-select>
           </md-input-container>
 
@@ -798,6 +911,76 @@ pre.CodeMirror-line {
               </md-input-container>
             </md-content>
           </md-content>
+
+          <md-content layout="column" id="oauth-group" ng-if="c.authType=='oauth2'">
+
+            <md-input-container id="grant-type-id" flex class="md-block">
+              <label for="grant-type">Grant Type</label>
+              <md-select id="grant-type" class="remove-shadow" ng-init="c.grantType='code'" ng-model="c.grantType">
+                <md-option style="border: none !important; box-shadow: none !important;" value="code">Authorization Code</md-option>
+                <md-option style="border: none !important; box-shadow: none !important;" value="client_credentials">Client Credentials</md-option>
+                <md-option style="border: none !important; box-shadow: none !important;" value="password">Password Credentials</md-option>
+              </md-select>
+            </md-input-container>
+
+            <md-input-container ng-if="c.grantType=='code'">
+              <label for="auth-url">Authorization URL</label>
+              <input type="url" id="auth-url" ng-model="c.authUrl" />
+            </md-input-container>
+
+            <md-input-container>
+              <label for="token-url">Token URL</label>
+              <input type="url" id="token-url" ng-model="c.tokenUrl" />
+            </md-input-container>
+            
+            <md-input-container ng-if="c.grantType=='code'">
+              <label for="redirect-url">Redirect URL</label>
+              <input type="url" id="redirect-url" ng-model="c.redirectUrl" />
+            </md-input-container>
+            
+            <md-input-container>
+              <label for="client-id">Client ID</label>
+              <input type="text" id="client-id" ng-model="c.clientId" />
+            </md-input-container>
+
+            <md-content layout="row">
+              <md-input-container flex>
+                <label for="client-secret">Client Secret</label>
+                <input type="{{c.passInputType}}" id="client-secret" ng-model="c.clientSecret"/>
+              </md-input-container>
+              <md-input-container>
+                <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
+                  <md-icon ng-if="c.showPassword">visibility</md-icon>
+                  <md-icon ng-if="!c.showPassword">visibility_off</md-icon>
+                </md-button>
+              </md-input-container>
+            </md-content>
+
+            <md-input-container ng-if="c.grantType=='password'">
+              <label for="username">Username</label>
+              <input type="text" id="username" ng-model="c.username" />
+            </md-input-container>
+
+            <md-content layout="row" ng-if="c.grantType=='password'">
+              <md-input-container flex>
+                <label for="pwd">Password</label>
+                <input type="{{c.passInputType}}" id="pwd" ng-model="c.password"/>
+              </md-input-container>
+              <md-input-container>
+                <md-button class="md-icon-button md-mini md-primary align-pwd-icon" ng-click="c.showHidePassword()">
+                  <md-icon ng-if="c.showPassword">visibility</md-icon>
+                  <md-icon ng-if="!c.showPassword">visibility_off</md-icon>
+                </md-button>
+              </md-input-container>
+            </md-content>
+
+            <div layout="row">
+              <md-button ng-click="c.getToken(c.grantType)" class="md-raised md-primary flex-grow">Get Token</md-button>
+              <!--<md-button ng-click="c.useToken()" class="md-raised md-accent flex-grow">Use Token</md-button>-->
+            </div>
+
+          </md-content>
+
         </md-content>
       </md-content>
 
@@ -813,7 +996,7 @@ pre.CodeMirror-line {
           </div>
         </md-toolbar>
 
-        <md-content flex="column" class="inset">
+        <md-content flex="column" class="inset max-height-250">
           <table id="request-header-table" class="table no-bottom-margin" width="100%">
             <thead>
               <tr>
@@ -854,7 +1037,7 @@ pre.CodeMirror-line {
                   </md-input-container>
                 </td>
                 <td width="20%" class="text-center vertical-middle">
-                  <md-button class="md-icon-button md-accent md-hue-3 top-margin-neg-20" ng-click="c.addHeader()">
+                  <md-button class="md-icon-button md-accent md-hue-3 top-margin-neg-20" ng-click="c.addHeader(c.headerKey, c.headerValue, true)">
                     <md-icon>add_circle_outline</md-icon>
                   </md-button>
                 </td>
