@@ -12,7 +12,7 @@
 	c.isReqWrapped = false;
 
 	// Testing defaults
-	c.redirectUrl = 'https://dev267231.service-now.com/oauth_redirect.do';
+	c.redirectUrl = 'https://dev267231.service-now.com/mailman?id=oauth_redirect';
 	c.authUrl = 'https://accounts.spotify.com/authorize';
 	c.clientId = 'e64417be1bfc4ff896338d23dbb515bb';
 	c.clientSecret = '91dccc0320a7430982fb3f08110493c7';
@@ -153,8 +153,7 @@
 	};
 
 	c.getToken = function (grantType) {
-
-		if (grantType == 'code') {
+		if (grantType == 'authorization_code') {
 			c.runAuthCodeFlow();
 		} else if (grantType == 'client_credentials') {
 			c.callTokenEndpoint();
@@ -163,6 +162,28 @@
 		}
 	};
 
+	c.runAuthCodeFlow = function () {
+		var state = crypto.randomUUID();
+		c.authCode = '';
+		var fullAuthURL = new URL(c.authUrl);
+		fullAuthURL.searchParams.set('response_type', 'code');
+		fullAuthURL.searchParams.set('client_id', c.clientId);
+		fullAuthURL.searchParams.set('redirect_uri', c.redirectUrl);
+		fullAuthURL.searchParams.set('state', state);
+		var oauthWindow = $window.open(fullAuthURL);
+
+		spUtil.recordWatch($scope, "x_792082_mailman_authorization_code", "state=" + state, function(response) {
+			oauthWindow.close();
+			if(response.data.record.code){
+				c.authCode = response.data.record.code.value;
+				c.callTokenEndpoint(c.authCode, c.redirectUrl);
+			}
+		});
+
+	};
+
+
+	/*
 	c.runAuthCodeFlow = function () {
 		c.authCode = '';
 		var fullAuthURL = new URL(c.authUrl);
@@ -198,6 +219,7 @@
 			}
 		}
 	};
+	*/
 
 	c.callTokenEndpoint= function (authCode, redirectUrl, username, password) {
 		var urlencoded = new URLSearchParams();
@@ -215,11 +237,13 @@
 			token_url: c.tokenUrl,
 			requestBody: urlencoded.toString()
 		}).then(function(resp) {
-			c.data.access_token = resp.data.access_token;
-			c.data.refresh_token = resp.data.refresh_token;
-			c.data.token_type = resp.data.token_type;
-			c.data.expires_in = resp.data.expires_in;
-			c.useToken(c.data.access_token);
+			if(resp.data.tokenFound == true){
+				c.data.access_token = resp.data.access_token;
+				c.data.refresh_token = resp.data.refresh_token;
+				c.data.token_type = resp.data.token_type;
+				c.data.expires_in = resp.data.expires_in;
+				c.useToken(c.data.access_token);
+			}
 		});
 	};
 
@@ -770,11 +794,14 @@ pre.CodeMirror-line {
 		var tokenResp = tokenReq.execute();
 		data.tokenRespStatus = tokenResp.getStatusCode();
 		if (data.tokenRespStatus >= 200 && data.tokenRespStatus <= 299){
+			data.tokenFound = true;
 			var tokenRespBody = JSON.parse(tokenResp.getBody());
 			data.access_token = tokenRespBody.access_token;
 			data.refresh_token = tokenRespBody.refresh_token;
 			data.token_type = tokenRespBody.token_type;
 			data.expires_in = tokenRespBody.expires_in;
+		} else {
+			data.tokenFound= false;
 		}
 	}
 
@@ -784,14 +811,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>370</sys_mod_count>
+        <sys_mod_count>380</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-11 20:16:36</sys_updated_on>
+        <sys_updated_on>2024-07-16 01:13:37</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
@@ -914,14 +941,14 @@ pre.CodeMirror-line {
 
             <md-input-container id="grant-type-id" flex class="md-block">
               <label for="grant-type">Grant Type</label>
-              <md-select id="grant-type" class="remove-shadow" ng-init="c.grantType='code'" ng-model="c.grantType">
-                <md-option style="border: none !important; box-shadow: none !important;" value="code">Authorization Code</md-option>
+              <md-select id="grant-type" class="remove-shadow" ng-init="c.grantType='authorization_code'" ng-model="c.grantType">
+                <md-option style="border: none !important; box-shadow: none !important;" value="authorization_code">Authorization Code</md-option>
                 <md-option style="border: none !important; box-shadow: none !important;" value="client_credentials">Client Credentials</md-option>
                 <md-option style="border: none !important; box-shadow: none !important;" value="password">Password Credentials</md-option>
               </md-select>
             </md-input-container>
 
-            <md-input-container ng-if="c.grantType=='code'">
+            <md-input-container ng-if="c.grantType=='authorization_code'">
               <label for="auth-url">Authorization URL</label>
               <input type="url" id="auth-url" ng-model="c.authUrl" />
             </md-input-container>
@@ -931,9 +958,9 @@ pre.CodeMirror-line {
               <input type="url" id="token-url" ng-model="c.tokenUrl" />
             </md-input-container>
             
-            <md-input-container ng-if="c.grantType=='code'">
+            <md-input-container ng-if="c.grantType=='authorization_code'">
               <label for="redirect-url">Redirect URL</label>
-              <input type="url" id="redirect-url" ng-model="c.redirectUrl" />
+              <input type="url" id="redirect-url" ng-model="c.redirectUrl" ng-disabled="true"/>
             </md-input-container>
             
             <md-input-container>

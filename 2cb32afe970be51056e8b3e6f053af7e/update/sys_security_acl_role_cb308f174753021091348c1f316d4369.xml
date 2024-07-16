@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_security_acl_role">
+    <sys_security_acl_role action="INSERT_OR_UPDATE">
+        <sys_class_name>sys_security_acl_role</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-07-15 10:11:54</sys_created_on>
+        <sys_id>cb308f174753021091348c1f316d4369</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x_792082_mailman_authorization_code.x_792082_mailman.authorization_code_user</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_security_acl display_value="x_792082_mailman_authorization_code">cb308f174753021091348c1f316d4366</sys_security_acl>
+        <sys_update_name>sys_security_acl_role_cb308f174753021091348c1f316d4369</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-15 10:11:54</sys_updated_on>
+        <sys_user_role display_value="x_792082_mailman.authorization_code_user" name="x_792082_mailman.authorization_code_user">36308f174753021091348c1f316d4329</sys_user_role>
+    </sys_security_acl_role>
+</record_update>
