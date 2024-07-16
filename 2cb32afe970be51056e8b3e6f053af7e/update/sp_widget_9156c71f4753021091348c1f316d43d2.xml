@@ -6,6 +6,7 @@
 	var c = this;
 
 	c.secondsRemaining = 3; // time remaining in seconds
+	c.stateIcon = (c.data.isAuthenticated)? 'verified_user' : 'gpp_bad';
 
 	var intervalId = $interval(function () {
 
@@ -26,7 +27,28 @@
 
 };]]></client_script>
         <controller_as>c</controller_as>
-        <css/>
+        <css>.outer-wrapper {
+  border-radius: 15px;
+  min-height: 200px;
+  margin: 50px auto 60px auto;
+  padding: 10px;
+}
+
+md-icon {
+  font-size: 72px;
+  width: 72px;
+  height: 72px;
+}
+
+.auth-details {
+  align-self: center;
+  gap: 20px;
+}
+
+h3, h4 {
+  padding: 0;
+  margin: 0;
+}</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
         <description/>
@@ -48,13 +70,6 @@
 	var error = $sp.getParameter('error');
 	var state = $sp.getParameter('state');
 	data.isAuthenticated = false;
-	
-	/*
-	console.log('server Code: ' + code);
-	console.log('server Error: ' + error);
-	console.log('server State: ' + state);
-	*/
-
 
 	if(code && state) {
 		data.isAuthenticated = true;
@@ -62,7 +77,6 @@
 	else if (error && state) {
 		data.isAuthenticated = false;
 		data.errorCode = error;
-		//gs.addErrorMessage('Error code: ' + data.errorCode);
 	}
 
 	if(input && input.action == 'insertAuthCode'){
@@ -80,25 +94,31 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-07-15 10:38:32</sys_created_on>
         <sys_id>9156c71f4753021091348c1f316d43d2</sys_id>
-        <sys_mod_count>17</sys_mod_count>
+        <sys_mod_count>47</sys_mod_count>
         <sys_name>OAuth Redirection Manager</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_9156c71f4753021091348c1f316d43d2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-16 01:02:57</sys_updated_on>
-        <template><![CDATA[<md-content flex layout-padding>
-  
-  <h3>
-    Authentication has 
-    <span ng-if="c.data.isAuthenticated">succeeded.</span>
-    <span ng-if="!c.data.isAuthenticated">failed.</span> 
-    You will be redirected to the application in {{c.secondsRemaining}} seconds.
-  </h3>
-  
-  <h4 ng-if="!c.data.isAuthenticated">Error Code: {{c.data.errorCode}}</h4>
-  
-</md-content>]]></template>
+        <sys_updated_on>2024-07-16 15:11:10</sys_updated_on>
+        <template><![CDATA[<div md-whiteframe="10" class="outer-wrapper" layout="row">
+
+  <div flex="10" layout="row">
+    <md-icon ng-class="{'md-accent md-hue-3':c.data.isAuthenticated, 'md-warn md-hue-2':!c.data.isAuthenticated}" ng-bind="c.stateIcon"></md-icon>
+  </div>
+
+  <div flex="90" class="auth-details" layout="column">
+    <h3>
+      Authentication has 
+      <span ng-if="c.data.isAuthenticated">succeeded.</span>
+      <span ng-if="!c.data.isAuthenticated">failed.</span> 
+      You will be redirected to the application in {{c.secondsRemaining}} seconds.
+    </h3>
+
+    <h4 ng-if="!c.data.isAuthenticated">Error Code: {{c.data.errorCode}}</h4>
+  </div>
+
+</div>]]></template>
     </sp_widget>
 </record_update>

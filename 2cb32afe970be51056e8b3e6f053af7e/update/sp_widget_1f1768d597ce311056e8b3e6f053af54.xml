@@ -395,17 +395,16 @@ md-ink-bar {&#13;
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:25:23</sys_created_on>
         <sys_id>1f1768d597ce311056e8b3e6f053af54</sys_id>
-        <sys_mod_count>251</sys_mod_count>
+        <sys_mod_count>253</sys_mod_count>
         <sys_name>Mailman Body New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_1f1768d597ce311056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-05-30 15:38:36</sys_updated_on>
+        <sys_updated_on>2024-07-16 13:10:29</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
 
 <div ng-show="c.loading==true" ng-hide="c.loading!=true" id="mailman-loader-div" class="loadingOverlay">
   <md-progress-circular class="md-primary md-hue-2 progressCircle" md-diameter="80" md-mode="indeterminate"></md-progress-circular>

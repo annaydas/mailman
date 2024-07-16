@@ -12,7 +12,7 @@
 	c.isReqWrapped = false;
 
 	// Testing defaults
-	c.redirectUrl = 'https://dev267231.service-now.com/mailman?id=oauth_redirect';
+	c.redirectUrl = c.data.instanceUrl + 'mailman?id=oauth_redirect';
 	c.authUrl = 'https://accounts.spotify.com/authorize';
 	c.clientId = 'e64417be1bfc4ff896338d23dbb515bb';
 	c.clientSecret = '91dccc0320a7430982fb3f08110493c7';
@@ -708,6 +708,9 @@ pre.CodeMirror-line {
 	/* e.g., data.table = $sp.getValue('table'); */
 
 	if (!input) {
+		
+		data.instanceUrl = gs.getProperty('glide.servlet.uri');
+		
 		data.headersNew = [{
 			"key": "Content-Type",
 			"value": "application/json",
@@ -811,18 +814,16 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>380</sys_mod_count>
+        <sys_mod_count>386</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-16 01:13:37</sys_updated_on>
+        <sys_updated_on>2024-07-16 13:17:17</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet"/>
 
 <div id="mm-widget-container">
 
