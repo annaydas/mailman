@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_public_widget_allow_table">
+    <m2m_sp_public_widget_allow_table action="INSERT_OR_UPDATE">
+        <sys_class_name>m2m_sp_public_widget_allow_table</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-07-17 12:36:22</sys_created_on>
+        <sys_id>3874394047a7c21091348c1f316d434d</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>9156c71f4753021091348c1f316d43d2</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_update_name>m2m_sp_public_widget_allow_table_3874394047a7c21091348c1f316d434d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-17 12:36:22</sys_updated_on>
+        <table>x_792082_mailman_authorization_code</table>
+        <widget display_value="OAuth Redirection Manager">9156c71f4753021091348c1f316d43d2</widget>
+    </m2m_sp_public_widget_allow_table>
+</record_update>

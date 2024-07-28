@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><database>
-    <element db_object_id="27883adb4713021091348c1f316d43b3" label="Authorization Code" max_length="40" name="x_792082_mailman_authorization_code" type="collection">
+    <element db_object_id="198b69044767c21091348c1f316d4368" label="Authorization Code" max_length="40" name="x_792082_mailman_authorization_code" type="collection">
         <element label="Code" max_length="255" name="code" type="password2"/>
         <element label="State" max_length="40" name="state" type="string"/>
         <element label="Error" max_length="40" name="error" type="string"/>

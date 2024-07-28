@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller = function($scope, spUtil, spModal, $window, $timeout, $mdToast, $mdSidenav, $mdDialog) {
+        <client_script><![CDATA[api.controller = function($scope, spUtil, spModal, $window, $timeout, $mdToast, $mdDialog) {
 	/* widget controller */
 	var c = this;
 	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
@@ -10,9 +10,95 @@
 	c.passInputType = 'password';
 	c.isRespWrapped = false;
 	c.isReqWrapped = false;
+	c.instanceID = spUtil.createUid('xxxxxxxx');
+	c.disablePrevBtn = true;
+	c.disableNextBtn = false;
+	c.redirectUrl = location.origin + '/mailman?id=oauth_redirect';
+	c.sliderHeaderArr = ["Request Headers", "Query Parameters"];
+	c.sliderHeader = c.sliderHeaderArr[0];
+
+	c.prevSlide = function() {
+		angular.element("div[instance='" + c.instanceID + "']")[0].swiper.slidePrev();
+	};
+
+	c.nextSlide = function() {
+		angular.element("div[instance='" + c.instanceID + "']")[0].swiper.slideNext();
+	};
+
+	c.onSlideChangeStart = function(swiper) {
+		c.disablePrevBtn = (swiper.isBeginning) ? true : false;
+		c.disableNextBtn = (swiper.isEnd) ? true : false;
+		c.sliderHeader = c.sliderHeaderArr[swiper.activeIndex];
+	};
+
+	$scope.$watch('c.data.queryParams', function(oldValue, newValue) {
+		var urlInputElem = $('#urlInput')[0];
+		var cursorPosition = urlInputElem.selectionStart;
+
+
+		if(c.data.endpointUrl){
+			var urlObj = new URL(c.data.endpointUrl);
+			var paramsObj = urlObj.searchParams;
+			urlObj.search = '';
+			
+			c.data.queryParams.forEach(function (item){
+				paramsObj.set(item.key, item.value);
+			});
+
+			var urlStr = urlObj.toString();
+			
+			if(urlStr.endsWith('=')){
+				urlStr = urlStr.substring(0, urlStr.lastIndexOf('='));
+			}
+			
+			if(urlStr.includes('=&')){
+				urlStr = urlStr.replace('=&', '&');
+			}
+			
+			c.data.endpointUrl = decodeURI(urlStr);
+			$timeout(function (elem){
+					urlInputElem.setSelectionRange(cursorPosition, cursorPosition);
+			}, 50);
+
+		}
+	}, true);
+
+	c.updateQueryParamsObj = function () {
+		c.data.queryParams = [];
+		if(c.data.endpointUrl){
+			var urlObj = new URL(c.data.endpointUrl);
+			for(var [key, value] of urlObj.searchParams.entries()){
+				if(key || value){
+					c.data.queryParams.push({
+						"key": key,
+						"value": value,
+						"editingKey": false,
+						"editingValue": false
+					});
+				}
+				/*if(key && value){
+					var duplicateKey = c.data.queryParams.find(function (item) {
+						return item.key === key;
+					});
+
+					if(duplicateKey){
+						duplicateKey.value = value;
+					} else {
+						c.data.queryParams.push({
+							"key": key,
+							"value": value,
+							"editingKey": false,
+							"editingValue": false
+						});
+					}
+				}*/
+			}
+		} else {
+			//c.data.queryParams = [];
+		}
+	};
 
 	// Testing defaults
-	c.redirectUrl = c.data.instanceUrl + 'mailman?id=oauth_redirect';
 	c.authUrl = 'https://accounts.spotify.com/authorize';
 	c.clientId = 'e64417be1bfc4ff896338d23dbb515bb';
 	c.clientSecret = '91dccc0320a7430982fb3f08110493c7';
@@ -67,7 +153,7 @@
 			angular.element('md-content#response-body')[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isRespWrapped);
 		}
 
-	}
+	};
 
 	c.submit = function() {
 
@@ -108,18 +194,34 @@
 		}
 	};
 
-	c.addHeader = function(headerKey, headerValue, manualInput) {
+	c.addEntry = function(key, value, manualInput, type) {
 
-		if (headerKey && headerValue) {
+		var arrName = '';
+		var keyModel = '';
+		var valueModel = '';
+		switch (type) {
+			case 'header':
+				arrName = 'headersNew';
+				keyModel = 'headerKey';
+				valueModel = 'headerValue';
+				break;
+			case 'queryParam':
+				arrName = 'queryParams';
+				keyModel = 'queryParamKey';
+				valueModel = 'queryParamValue';
+				break;
+		}
+
+		if (key && value) {
 
 			var found = false;
-			for (i = 0; i < c.data.headersNew.length; i++) {
-				if (c.data.headersNew[i].key == headerKey) {
+			for (i = 0; i < c.data[arrName].length; i++) {
+				if (c.data[arrName][i].key == key) {
 					found = true;
 
-					if(headerKey == 'Authorization'){
-						c.data.headersNew[i].key = headerKey;
-						c.data.headersNew[i].value = headerValue;
+					if (key == 'Authorization') {
+						c.data[arrName][i].key = key;
+						c.data[arrName][i].value = value;
 					} else {
 						break;
 					}
@@ -128,31 +230,41 @@
 
 			if (!found) {
 				// Push the new item to the headers array
-				c.data.headersNew.push({
-					"key": headerKey,
-					"value": headerValue,
+				c.data[arrName].push({
+					"key": key,
+					"value": value,
 					"editingKey": false,
 					"editingValue": false
 				});
 
-				if(manualInput){
+				if (manualInput) {
 					//Clear the TextBoxes if manual input.
-					c.headerKey = "";
-					c.headerValue = "";
+					c[keyModel] = "";
+					c[valueModel] = "";
 				}
 			}
 		}
 
 	};
 
-	c.removeHeader = function(item, index) {
+	c.removeEntry = function(type, index) {
+
+		var arrName = '';
+		switch (type) {
+			case 'header':
+				arrName = 'headersNew';
+				break;
+			case 'queryParam':
+				arrName = 'queryParams';
+				break;
+		}
 
 		//Remove the item from Array using Index.
-		c.data.headersNew.splice(index, 1);
+		c.data[arrName].splice(index, 1);
 
 	};
 
-	c.getToken = function (grantType) {
+	c.getToken = function(grantType) {
 		if (grantType == 'authorization_code') {
 			c.runAuthCodeFlow();
 		} else if (grantType == 'client_credentials') {
@@ -162,7 +274,7 @@
 		}
 	};
 
-	c.runAuthCodeFlow = function () {
+	c.runAuthCodeFlow = function() {
 		var state = crypto.randomUUID();
 		c.authCode = '';
 		var fullAuthURL = new URL(c.authUrl);
@@ -174,7 +286,7 @@
 
 		spUtil.recordWatch($scope, "x_792082_mailman_authorization_code", "state=" + state, function(response) {
 			oauthWindow.close();
-			if(response.data.record.code){
+			if (response.data.record.code) {
 				c.authCode = response.data.record.code.value;
 				c.callTokenEndpoint(c.authCode, c.redirectUrl);
 			}
@@ -184,49 +296,57 @@
 
 
 	/*
-	c.runAuthCodeFlow = function () {
-		c.authCode = '';
-		var fullAuthURL = new URL(c.authUrl);
-		fullAuthURL.searchParams.set('response_type', c.grantType);
-		fullAuthURL.searchParams.set('client_id', c.clientId);
-		fullAuthURL.searchParams.set('redirect_uri', c.redirectUrl);
-		fullAuthURL.searchParams.set('state', 'hello123');
-		var oauthWindow = $window.open(fullAuthURL);
-		checkForAuthCode(oauthWindow);
+    c.runAuthCodeFlow = function () {
+    	c.authCode = '';
+    	var fullAuthURL = new URL(c.authUrl);
+    	fullAuthURL.searchParams.set('response_type', c.grantType);
+    	fullAuthURL.searchParams.set('client_id', c.clientId);
+    	fullAuthURL.searchParams.set('redirect_uri', c.redirectUrl);
+    	fullAuthURL.searchParams.set('state', 'hello123');
+    	var oauthWindow = $window.open(fullAuthURL);
+    	checkForAuthCode(oauthWindow);
 
-		function checkForAuthCode(oauthWindow) {
-			try{
-				// Check if the URL contains the authorization code 
-				var urlParams = new URLSearchParams(oauthWindow.location.search); 
-				authCode = urlParams.get('code');
-				if(!authCode) {
-					$timeout(function() {
-						checkForAuthCode(oauthWindow);
-					}, 1000, true, oauthWindow);
-				} else {
-					oauthWindow.close();
-					c.authCode = authCode;
-					if (c.authCode){
-						c.callTokenEndpoint(c.authCode, c.redirectUrl);
-					} else {
-						console.log('Auth Code not found.')
-					}				
-				}
-			} catch (e) {
-				$timeout(function() {
-					checkForAuthCode(oauthWindow);
-				}, 1000, true, oauthWindow);
-			}
-		}
-	};
-	*/
+    	function checkForAuthCode(oauthWindow) {
+    		try{
+    			// Check if the URL contains the authorization code 
+    			var urlParams = new URLSearchParams(oauthWindow.location.search); 
+    			authCode = urlParams.get('code');
+    			if(!authCode) {
+    				$timeout(function() {
+    					checkForAuthCode(oauthWindow);
+    				}, 1000, true, oauthWindow);
+    			} else {
+    				oauthWindow.close();
+    				c.authCode = authCode;
+    				if (c.authCode){
+    					c.callTokenEndpoint(c.authCode, c.redirectUrl);
+    				} else {
+    					console.log('Auth Code not found.')
+    				}				
+    			}
+    		} catch (e) {
+    			$timeout(function() {
+    				checkForAuthCode(oauthWindow);
+    			}, 1000, true, oauthWindow);
+    		}
+    	}
+    };
+    */
 
-	c.callTokenEndpoint= function (authCode, redirectUrl, username, password) {
+	c.callTokenEndpoint = function(authCode, redirectUrl, username, password) {
 		var urlencoded = new URLSearchParams();
-		if(authCode) {urlencoded.append("code", authCode);}
-		if(redirectUrl) {urlencoded.append("redirect_uri", redirectUrl);}
-		if(username) {urlencoded.append("username", username);}
-		if(password) {urlencoded.append("password", password);}
+		if (authCode) {
+			urlencoded.append("code", authCode);
+		}
+		if (redirectUrl) {
+			urlencoded.append("redirect_uri", redirectUrl);
+		}
+		if (username) {
+			urlencoded.append("username", username);
+		}
+		if (password) {
+			urlencoded.append("password", password);
+		}
 		urlencoded.append("client_id", c.clientId);
 		urlencoded.append("client_secret", c.clientSecret);
 		urlencoded.append("grant_type", c.grantType);
@@ -237,7 +357,7 @@
 			token_url: c.tokenUrl,
 			requestBody: urlencoded.toString()
 		}).then(function(resp) {
-			if(resp.data.tokenFound == true){
+			if (resp.data.tokenFound == true) {
 				c.data.access_token = resp.data.access_token;
 				c.data.refresh_token = resp.data.refresh_token;
 				c.data.token_type = resp.data.token_type;
@@ -247,9 +367,9 @@
 		});
 	};
 
-	c.useToken = function (accessToken) {
+	c.useToken = function(accessToken) {
 		accessToken = accessToken ? accessToken : c.data.access_token;
-		c.addHeader('Authorization', 'Bearer ' + accessToken, false);
+		c.addEntry('Authorization', 'Bearer ' + accessToken, false, 'header');
 	};
 
 	c.copy = function(str, source) {
@@ -270,8 +390,7 @@
 		$mdDialog.show({
 			controller: DialogController,
 			controllerAs: 'c',
-			template: 
-			'<md-dialog class="dialog-no-shadow">' +
+			template: '<md-dialog class="dialog-no-shadow">' +
 			'	<md-dialog-content class="md-dialog-content">' +
 			'		<h2 class="md-headline">Do you want to open Diagram View?</h2>' +
 			'		<div class="md-dialog-content md-subhead no-left-padding"><b>Caution:</b> This will send the data object to a third-party/external system (JSONCrack).</div>' +
@@ -284,16 +403,16 @@
 			'			Proceed' +
 			'		</md-button>' +
 			'	</md-dialog-actions>' +
-			'</md-dialog>'+
-			'<style>'+
-			'	.dialog-no-shadow:focus {border: none !important; box-shadow: 0 7px 8px -4px rgba(0,0,0,.2),0 13px 19px 2px rgba(0,0,0,.14),0 5px 24px 4px rgba(0,0,0,.12) !important;}'+
+			'</md-dialog>' +
+			'<style>' +
+			'	.dialog-no-shadow:focus {border: none !important; box-shadow: 0 7px 8px -4px rgba(0,0,0,.2),0 13px 19px 2px rgba(0,0,0,.14),0 5px 24px 4px rgba(0,0,0,.12) !important;}' +
 			'	.dialog-button-no-shadow:focus {border: none !important; box-shadow: none !important;}' +
 			'	.no-left-padding {padding-left: 0 !important;}' +
 			'</style>',
 			parent: angular.element(document.body),
 			targetEvent: ev,
 			clickOutsideToClose: true
-		}).then(function () {
+		}).then(function() {
 			spModal.open({
 				title: 'Diagram View',
 				widget: 'json_crack',
@@ -316,16 +435,16 @@
 				}
 			});
 
-		}, function () {
+		}, function() {
 			// Cancel button clicked
 		});
 
 		function DialogController($mdDialog) {
-			this.hide = function () {
+			this.hide = function() {
 				$mdDialog.hide();
 			};
 
-			this.cancel = function () {
+			this.cancel = function() {
 				$mdDialog.cancel();
 			};
 
@@ -350,6 +469,16 @@
 #mm-widget-container {
   margin-top: 20px;
   margin-bottom: 20px;
+}
+
+.btn-disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.swiper-slide {
+  font-size: initial;
+  text-align: initial;
 }
 
 input:focus, button:focus, md-chips-wrap {
@@ -695,7 +824,7 @@ pre.CodeMirror-line {
         <has_preview>true</has_preview>
         <id>mailman_widget_new</id>
         <internal>false</internal>
-        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <link><![CDATA[function link(scope, element, attrs, controller) {}]]></link>
         <name>Mailman Widget New</name>
         <option_schema>[{"name":"methodname","section":"Data","label":"Method Name","type":"string"},&#13;
 {"name":"endpointurl","section":"Data","label":"Endpoint URL","type":"string"},{"name":"preloadsaveddata","section":"Data","default_value":"false","label":"Preload Saved Data","type":"boolean"},{"name":"headersnew","section":"Data","label":"Headers","type":"string"},&#13;
@@ -708,9 +837,7 @@ pre.CodeMirror-line {
 	/* e.g., data.table = $sp.getValue('table'); */
 
 	if (!input) {
-		
-		data.instanceUrl = gs.getProperty('glide.servlet.uri');
-		
+
 		data.headersNew = [{
 			"key": "Content-Type",
 			"value": "application/json",
@@ -722,6 +849,8 @@ pre.CodeMirror-line {
 			"editingKey": false,
 			"editingValue": false
 		}];
+
+		data.queryParams = [];
 
 		data.responseBody = {
 			"value": JSON.stringify({}, null, 4)
@@ -781,14 +910,14 @@ pre.CodeMirror-line {
 		} catch (ex) {
 			data.output = ex;
 			gs.addErrorMessage(data.output);
-			if(!endTime){
+			if (!endTime) {
 				endTime = new GlideDateTime().getNumericValue();
 				data.responseTime = endTime - startTIme;
 			}
 		}
 	}
 
-	if(input && input.action == 'callTokenUrl') {
+	if (input && input.action == 'callTokenUrl') {
 		var tokenReq = new sn_ws.RESTMessageV2();
 		tokenReq.setEndpoint(input.token_url);
 		tokenReq.setHttpMethod('POST');
@@ -796,7 +925,7 @@ pre.CodeMirror-line {
 		tokenReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 		var tokenResp = tokenReq.execute();
 		data.tokenRespStatus = tokenResp.getStatusCode();
-		if (data.tokenRespStatus >= 200 && data.tokenRespStatus <= 299){
+		if (data.tokenRespStatus >= 200 && data.tokenRespStatus <= 299) {
 			data.tokenFound = true;
 			var tokenRespBody = JSON.parse(tokenResp.getBody());
 			data.access_token = tokenRespBody.access_token;
@@ -804,7 +933,7 @@ pre.CodeMirror-line {
 			data.token_type = tokenRespBody.token_type;
 			data.expires_in = tokenRespBody.expires_in;
 		} else {
-			data.tokenFound= false;
+			data.tokenFound = false;
 		}
 	}
 
@@ -814,14 +943,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>386</sys_mod_count>
+        <sys_mod_count>555</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-16 13:17:17</sys_updated_on>
+        <sys_updated_on>2024-07-28 12:58:31</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -842,7 +971,7 @@ pre.CodeMirror-line {
         </md-input-container>
         <md-input-container class="no-bottom-margin" flex="80">
           <label>URL</label>
-          <input id="urlInput" name="urlInput" ng-model="c.data.endpointUrl" ng-pattern="c.regex" ng-required="true" />
+          <input id="urlInput" name="urlInput" ng-model="c.data.endpointUrl" ng-pattern="c.regex" ng-required="true" ng-change="c.updateQueryParamsObj()" />
         </md-input-container>
         <div class="text-center">
           <md-button class="md-fab md-mini md-primary" ng-disabled="inputForm.urlInput.$invalid" type="submit" ng-click="c.submit()">
@@ -958,12 +1087,12 @@ pre.CodeMirror-line {
               <label for="token-url">Token URL</label>
               <input type="url" id="token-url" ng-model="c.tokenUrl" />
             </md-input-container>
-            
+
             <md-input-container ng-if="c.grantType=='authorization_code'">
               <label for="redirect-url">Redirect URL</label>
               <input type="url" id="redirect-url" ng-model="c.redirectUrl" ng-disabled="true"/>
             </md-input-container>
-            
+
             <md-input-container>
               <label for="client-id">Client ID</label>
               <input type="text" id="client-id" ng-model="c.clientId" />
@@ -1017,60 +1146,126 @@ pre.CodeMirror-line {
               <md-icon>toc</md-icon>
             </md-toolbar-filler>
             <div class="md-toolbar-tools">
-              <h2 flex md-truncate>Request Headers</h2>
+              <h2 flex md-truncate>{{c.sliderHeader}}</h2>
+              <md-button id="prev-{{c.instanceID}}" class="md-icon-button" ng-click="c.prevSlide()" ng-disabled="c.disablePrevBtn">
+                <md-icon>chevron_left</md-icon>
+              </md-button>       
+              <md-button id="next-{{c.instanceID}}" class="md-icon-button" ng-click="c.nextSlide()" ng-disabled="c.disableNextBtn">
+                <md-icon>chevron_right</md-icon>
+              </md-button>
             </div>
           </div>
         </md-toolbar>
 
-        <md-content flex="column" class="inset max-height-250">
-          <table id="request-header-table" class="table no-bottom-margin" width="100%">
-            <thead>
-              <tr>
-                <th width="30%">Key</th>
-                <th width="50%">Value</th>
-                <th width="20%" class="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat="item in c.data.headersNew">
-                <td width="30%" class="vertical-middle" ng-class="{'bg-edit': item.editingKey}">
-                  <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">
-                    {{item.key}}
-                  </span>
-                  <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
-                </td>
-                <td width="50%" class="vertical-middle" ng-class="{'bg-edit': item.editingValue}">
-                  <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">
-                    {{item.value}}
-                  </span>
-                  <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')" />
-                </td>
-                <td width="20%" class="text-center vertical-middle">
-                  <md-button class="md-icon-button md-warn md-hue-2" ng-click="c.removeHeader(item, $index)">
-                    <md-icon>highlight_off</md-icon>
-                  </md-button>
-                </td>
-              </tr>
-              <tr>
-                <td width="30%" class="vertical-middle no-left-right-padding">
-                  <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
-                    <input id="inputKey" type="text" ng-model="c.headerKey" placeholder="Key" />
-                  </md-input-container>
-                </td>
-                <td width="50%" class="vertical-middle">
-                  <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
-                    <input id="inputValue" type="text" ng-model="c.headerValue" placeholder="Value" />
-                  </md-input-container>
-                </td>
-                <td width="20%" class="text-center vertical-middle">
-                  <md-button class="md-icon-button md-accent md-hue-3 top-margin-neg-20" ng-click="c.addHeader(c.headerKey, c.headerValue, true)">
-                    <md-icon>add_circle_outline</md-icon>
-                  </md-button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </md-content>
+        <section class="swipe">
+          <swiper instance="{{c.instanceID}}" on-slide-change-start="c.onSlideChangeStart">
+            <slides>
+              <slide id="request-header-slide">
+                <md-content flex="column" class="inset max-height-250">
+                  <table id="request-header-table" class="table no-bottom-margin" width="100%">
+                    <thead>
+                      <tr>
+                        <th width="30%">Key</th>
+                        <th width="50%">Value</th>
+                        <th width="20%" class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr ng-repeat="item in c.data.headersNew">
+                        <td width="30%" class="vertical-middle" ng-class="{'bg-edit': item.editingKey}">
+                          <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">
+                            {{item.key}}
+                          </span>
+                          <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
+                        </td>
+                        <td width="50%" class="vertical-middle" ng-class="{'bg-edit': item.editingValue}">
+                          <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">
+                            {{item.value}}
+                          </span>
+                          <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')" />
+                        </td>
+                        <td width="20%" class="text-center vertical-middle">
+                          <md-button class="md-icon-button md-warn md-hue-2" ng-click="c.removeEntry('header', $index)">
+                            <md-icon>highlight_off</md-icon>
+                          </md-button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="30%" class="vertical-middle no-left-right-padding">
+                          <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
+                            <input id="inputKey" type="text" ng-model="c.headerKey" placeholder="Key" />
+                          </md-input-container>
+                        </td>
+                        <td width="50%" class="vertical-middle">
+                          <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
+                            <input id="inputValue" type="text" ng-model="c.headerValue" placeholder="Value" />
+                          </md-input-container>
+                        </td>
+                        <td width="20%" class="text-center vertical-middle">
+                          <md-button class="md-icon-button md-accent md-hue-3 top-margin-neg-20" ng-click="c.addEntry(c.headerKey, c.headerValue, true, 'header')">
+                            <md-icon>add_circle_outline</md-icon>
+                          </md-button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </md-content>
+              </slide>
+
+              <slide id="query-params-slide">
+                <md-content flex="column" class="inset max-height-250">
+                  <table id="query-params-table" class="table no-bottom-margin" width="100%">
+                    <thead>
+                      <tr>
+                        <th width="30%">Key1</th>
+                        <th width="50%">Value1</th>
+                        <th width="20%" class="text-center">Actions1</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr ng-repeat="item in c.data.queryParams">
+                        <td width="30%" class="vertical-middle" ng-class="{'bg-edit': item.editingKey}">
+                          <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">
+                            {{item.key}}
+                          </span>
+                          <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
+                        </td>
+                        <td width="50%" class="vertical-middle" ng-class="{'bg-edit': item.editingValue}">
+                          <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">
+                            {{item.value}}
+                          </span>
+                          <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')" />
+                        </td>
+                        <td width="20%" class="text-center vertical-middle">
+                          <md-button class="md-icon-button md-warn md-hue-2" ng-click="c.removeEntry('queryParam', $index)">
+                            <md-icon>highlight_off</md-icon>
+                          </md-button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="30%" class="vertical-middle no-left-right-padding">
+                          <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
+                            <input id="inputKey" type="text" ng-model="c.queryParamKey" placeholder="Key" />
+                          </md-input-container>
+                        </td>
+                        <td width="50%" class="vertical-middle">
+                          <md-input-container md-no-float class="md-block top-margin-10 no-bottom-margin">
+                            <input id="inputValue" type="text" ng-model="c.queryParamValue" placeholder="Value" />
+                          </md-input-container>
+                        </td>
+                        <td width="20%" class="text-center vertical-middle">
+                          <md-button class="md-icon-button md-accent md-hue-3 top-margin-neg-20" ng-click="c.addEntry(c.queryParamKey, c.queryParamValue, true, 'queryParam')">
+                            <md-icon>add_circle_outline</md-icon>
+                          </md-button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </md-content>
+              </slide>
+            </slides>
+          </swiper>
+        </section>
       </md-content>
     </div>
 

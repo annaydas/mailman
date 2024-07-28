@@ -7,7 +7,7 @@
         <client_scripts_access>false</client_scripts_access>
         <configuration_access>false</configuration_access>
         <create_access>false</create_access>
-        <create_access_controls>true</create_access_controls>
+        <create_access_controls>false</create_access_controls>
         <delete_access>false</delete_access>
         <is_extendable>false</is_extendable>
         <label>Authorization Code</label>
@@ -20,18 +20,18 @@
         <super_class/>
         <sys_class_name>sys_db_object</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2024-07-15 10:11:53</sys_created_on>
-        <sys_id>27883adb4713021091348c1f316d43b3</sys_id>
+        <sys_created_on>2024-07-17 11:59:11</sys_created_on>
+        <sys_id>198b69044767c21091348c1f316d4368</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_name>Authorization Code</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
-        <sys_update_name>sys_db_object_27883adb4713021091348c1f316d43b3</sys_update_name>
+        <sys_update_name>sys_db_object_198b69044767c21091348c1f316d4368</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-15 10:11:53</sys_updated_on>
+        <sys_updated_on>2024-07-17 11:59:11</sys_updated_on>
         <update_access>false</update_access>
-        <user_role display_value="x_792082_mailman.authorization_code_user" name="x_792082_mailman.authorization_code_user">36308f174753021091348c1f316d4329</user_role>
+        <user_role display_value="public" name="public">b0593b350a0a0aa7001d689e4542dc28</user_role>
         <ws_access>true</ws_access>
     </sys_db_object>
 </record_update>

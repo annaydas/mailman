@@ -33,7 +33,7 @@
 		// On close callback to handle close, backdrop click, or escape key pressed.
 		// Callback happens BEFORE the close action occurs.
 		instance.onClose(function() {
-			console.log(angular.element('section.page')[0]);
+			//console.log(angular.element('section.page')[0]);
 			$timeout(function () {
 				angular.element('section.page')[0].scrollBy(0, 0.1);
 			}, 100);
@@ -42,7 +42,6 @@
 
 
 	c.closeNav = function(dataObj){
-		console.log('Hellow World Testing');
 		$mdSidenav('left-nav', true).close().then(function() {
 			angular.element('section.page')[0].scrollBy(0, 0.1);
 		});
@@ -90,11 +89,12 @@
 		if (c.tabs.length > 1) {
 			var closedWidID = c.tabs[index].id;
 			var storageArr = JSON.parse(localStorage.getItem('mailmanSavedRequests'));
-			var filteredStorageArr = storageArr.filter(function(item) {
-				return item.widgetID !== closedWidID;
-			});
-			localStorage.setItem('mailmanSavedRequests', JSON.stringify(filteredStorageArr));
-
+			if(storageArr){
+				var filteredStorageArr = storageArr.filter(function(item) {
+					return item.widgetID !== closedWidID;
+				});
+				localStorage.setItem('mailmanSavedRequests', JSON.stringify(filteredStorageArr));
+			}
 			c.tabs.splice(index, 1);
 		}
 
@@ -395,14 +395,14 @@ md-ink-bar {&#13;
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:25:23</sys_created_on>
         <sys_id>1f1768d597ce311056e8b3e6f053af54</sys_id>
-        <sys_mod_count>253</sys_mod_count>
+        <sys_mod_count>254</sys_mod_count>
         <sys_name>Mailman Body New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_1f1768d597ce311056e8b3e6f053af54</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-16 13:10:29</sys_updated_on>
+        <sys_updated_on>2024-07-26 07:12:32</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 

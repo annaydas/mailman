@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_security_acl_role">
+    <sys_security_acl_role action="DELETE">
+        <sys_class_name>sys_security_acl_role</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-07-18 07:41:30</sys_created_on>
+        <sys_id>24a9b5dc476b061091348c1f316d4346</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>.public</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_security_acl display_value="">339971dc476b061091348c1f316d4362</sys_security_acl>
+        <sys_update_name>sys_security_acl_role_24a9b5dc476b061091348c1f316d4346</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-18 07:41:30</sys_updated_on>
+        <sys_user_role display_value="public" name="public">b0593b350a0a0aa7001d689e4542dc28</sys_user_role>
+    </sys_security_acl_role>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</application>
+        <file_path/>
+        <instance_id>99ddda121bc60ed439a54089bd4bcb2c</instance_id>
+        <instance_name>dev267231</instance_name>
+        <name>sys_security_acl_role_24a9b5dc476b061091348c1f316d4346</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_security_acl_role"><sys_security_acl_role action="INSERT_OR_UPDATE"><sys_class_name>sys_security_acl_role</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2024-07-18 07:41:30</sys_created_on><sys_id>24a9b5dc476b061091348c1f316d4346</sys_id><sys_mod_count>0</sys_mod_count><sys_name>.public</sys_name><sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package><sys_policy/><sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope><sys_security_acl display_value="">339971dc476b061091348c1f316d4362</sys_security_acl><sys_update_name>sys_security_acl_role_24a9b5dc476b061091348c1f316d4346</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2024-07-18 07:41:30</sys_updated_on><sys_user_role display_value="public" name="public">b0593b350a0a0aa7001d689e4542dc28</sys_user_role></sys_security_acl_role></record_update>]]></payload>
+        <payload_hash>-126197403</payload_hash>
+        <record_name>.public</record_name>
+        <reverted_from/>
+        <source>2f60c4484726021091348c1f316d43a4</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-07-18 07:41:30</sys_created_on>
+        <sys_id>d59abd1047ab061091348c1f316d43e5</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>190c4c9fe6d0000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-18 07:41:30</sys_updated_on>
+        <type>Access Roles</type>
+        <update_guid>d99abd109aab0610a682da2b953173e4</update_guid>
+        <update_guid_history>d99abd109aab0610a682da2b953173e4:-126197403</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete display_value=".public">0261c65847ab061091348c1f316d437c</sys_audit_delete>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-07-18 08:11:18</sys_created_on>
+        <sys_db_object display_value="" name="sys_security_acl_role">sys_security_acl_role</sys_db_object>
+        <sys_id>405ffe489bfc47008d9d887be4459000</sys_id>
+        <sys_metadata>24a9b5dc476b061091348c1f316d4346</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>.public</sys_name>
+        <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
+        <sys_scope_delete display_value="">ddccbcd626c14b68b5524bfd43c1dd10</sys_scope_delete>
+        <sys_update_name>sys_security_acl_role_24a9b5dc476b061091348c1f316d4346</sys_update_name>
+        <sys_update_version display_value="sys_security_acl_role_24a9b5dc476b061091348c1f316d4346">d59abd1047ab061091348c1f316d43e5</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-18 08:11:18</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>
