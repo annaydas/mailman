@@ -2,28 +2,28 @@
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
         <client_script><![CDATA[api.controller = function($scope, $interval, spUtil) {
-    /* widget controller */
-    var c = this;
+	/* widget controller */
+	var c = this;
 
-    c.secondsRemaining = 3; // time remaining in seconds
-    c.stateIcon = (c.data.isAuthenticated) ? 'verified_user' : 'gpp_bad';
+	c.secondsRemaining = 3; // time remaining in seconds
+	c.stateIcon = (c.data.isAuthenticated) ? 'verified_user' : 'gpp_bad';
 
-    var intervalId = $interval(function() {
+	var intervalId = $interval(function() {
 
-        c.secondsRemaining -= 1;
+		c.secondsRemaining -= 1;
 
-        // no need to continue if time is over
-        if (c.secondsRemaining <= 0) {
-            // time is over, do stuff
-            $interval.cancel(intervalId);
-            c.server.get({
-                action: 'insertAuthCode'
-            }).then(function(r) {
-                c.data.insertedRecord = r.data.insertedRecord;
-            });
-        }
+		// no need to continue if time is over
+		if (c.secondsRemaining <= 0) {
+			// time is over, do stuff
+			$interval.cancel(intervalId);
+			c.server.get({
+				action: 'insertAuthCode'
+			}).then(function(r) {
+				//c.data.insertedRecord = r.data.insertedRecord;
+			});
+		}
 
-    }, 1000);
+	}, 1000);
 
 };]]></client_script>
         <controller_as>c</controller_as>
@@ -63,10 +63,11 @@ h3, h4 {
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
-    /* populate the 'data' object */
-    /* e.g., data.table = $sp.getValue('table'); */
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
 
-    data.codes = [];
+	/*
+		data.codes = [];
     var authcodegr = new GlideRecord('x_792082_mailman_authorization_code');
     authcodegr.setLimit(2);
     authcodegr.orderByDesc('sys_created_on');
@@ -77,27 +78,28 @@ h3, h4 {
             'sys_id': authcodegr.getUniqueValue()
         });
     }
+		*/
 
-    var code = $sp.getParameter('code');
-    var error = $sp.getParameter('error');
-    var state = $sp.getParameter('state');
-    data.isAuthenticated = false;
+	var code = $sp.getParameter('code');
+	var error = $sp.getParameter('error');
+	var state = $sp.getParameter('state');
+	data.isAuthenticated = false;
 
-    if (code && state) {
-        data.isAuthenticated = true;
-    } else if (error && state) {
-        data.isAuthenticated = false;
-        data.errorCode = error;
-    }
+	if (code && state) {
+		data.isAuthenticated = true;
+	} else if (error && state) {
+		data.isAuthenticated = false;
+		data.errorCode = error;
+	}
 
-    if (input && input.action == 'insertAuthCode') {
-        var authCodeGr = new GlideRecord('x_792082_mailman_authorization_code');
-        authCodeGr.initialize();
-        if (code) authCodeGr.setValue('code', code);
-        if (error) authCodeGr.setValue('error', error);
-        if (state) authCodeGr.setValue('state', state);
-        data.insertedRecord = authCodeGr.insert();
-    }
+	if (input && input.action == 'insertAuthCode') {
+		var authCodeGr = new GlideRecord('x_792082_mailman_authorization_code');
+		authCodeGr.initialize();
+		if (code) authCodeGr.setValue('code', code);
+		if (error) authCodeGr.setValue('error', error);
+		if (state) authCodeGr.setValue('state', state);
+		data.insertedRecord = authCodeGr.insert();
+	}
 
 })();]]></script>
         <servicenow>false</servicenow>
@@ -105,14 +107,14 @@ h3, h4 {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-07-15 10:38:32</sys_created_on>
         <sys_id>9156c71f4753021091348c1f316d43d2</sys_id>
-        <sys_mod_count>62</sys_mod_count>
+        <sys_mod_count>63</sys_mod_count>
         <sys_name>OAuth Redirection Manager</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_9156c71f4753021091348c1f316d43d2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-17 12:53:44</sys_updated_on>
+        <sys_updated_on>2024-08-01 06:45:39</sys_updated_on>
         <template><![CDATA[<div md-whiteframe="10" class="outer-wrapper" layout="row">
 
   <div flex="10" layout="row">
@@ -126,11 +128,11 @@ h3, h4 {
       <span ng-if="!c.data.isAuthenticated">failed.</span> 
       You will be redirected to the application in {{c.secondsRemaining}} seconds.
     </h3>
-    
-    <h3>Record: {{c.data.insertedRecord}}</h3>
-    
+
+    <!--<h3>Record: {{c.data.insertedRecord}}</h3>
+
     <h5>Existing Records</h5>
-    <h6 ng-repeat="item in c.data.codes">{{item.code}} - {{item.sys_id}}</h6>
+    <h6 ng-repeat="item in c.data.codes">{{item.code}} - {{item.sys_id}}</h6>-->
 
     <h4 ng-if="!c.data.isAuthenticated">Error Code: {{c.data.errorCode}}</h4>
   </div>
