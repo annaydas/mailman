@@ -34,30 +34,35 @@
 	$scope.$watch('c.data.queryParams', function(oldValue, newValue) {
 		var urlInputElem = $('#urlInput')[0];
 		var cursorPosition = urlInputElem.selectionStart;
+		var inputLength = urlInputElem.value.length;
+		var pos = cursorPosition;
 
+		if ((cursorPosition < inputLength) && (urlInputElem.value.charAt(cursorPosition - 1) == '=')){
+			pos = cursorPosition - 1;
+		}
 
 		if(c.data.endpointUrl){
 			var urlObj = new URL(c.data.endpointUrl);
 			var paramsObj = urlObj.searchParams;
 			urlObj.search = '';
-			
+
 			c.data.queryParams.forEach(function (item){
 				paramsObj.set(item.key, item.value);
 			});
 
 			var urlStr = urlObj.toString();
-			
+
 			if(urlStr.endsWith('=')){
 				urlStr = urlStr.substring(0, urlStr.lastIndexOf('='));
 			}
-			
+
 			if(urlStr.includes('=&')){
 				urlStr = urlStr.replace('=&', '&');
 			}
-			
-			c.data.endpointUrl = decodeURI(urlStr);
+
+			c.data.endpointUrl = decodeURIComponent(urlStr);
 			$timeout(function (elem){
-					urlInputElem.setSelectionRange(cursorPosition, cursorPosition);
+				urlInputElem.setSelectionRange(pos, pos);
 			}, 50);
 
 		}
@@ -185,11 +190,17 @@
 				headers: headersObj,
 				body: c.data.requestBody.value
 			}).then(function(resp) {
-				c.data.responseBody.value = resp.data.responseBody;
-				c.data.statusFlag = resp.data.statusFlag;
-				c.data.httpStatus = resp.data.httpStatus;
-				c.data.responseTime = resp.data.responseTime;
-				spUtil.scrollTo('#response-body', 2000);
+				if(resp.data.exceptionMessage){
+					console.error("Mailman exception: " + resp.data.exceptionMessage);
+					c.openToast('Exception occured while executing the request. Check browser console for details.', 'error');
+					//c.openToast(resp.data.exceptionMessage, 'error');
+				} else {
+					c.data.responseBody.value = resp.data.responseBody;
+					c.data.statusFlag = resp.data.statusFlag;
+					c.data.httpStatus = resp.data.httpStatus;
+					c.data.responseTime = resp.data.responseTime;
+					spUtil.scrollTo('#response-body', 2000);
+				}
 			});
 		}
 	};
@@ -908,12 +919,11 @@ pre.CodeMirror-line {
 			data.responseTime = endTime - startTime;
 
 		} catch (ex) {
-			data.output = ex;
-			gs.addErrorMessage(data.output);
 			if (!endTime) {
 				endTime = new GlideDateTime().getNumericValue();
-				data.responseTime = endTime - startTIme;
+				data.responseTime = endTime - startTime;
 			}
+			data.exceptionMessage = ex.message;
 		}
 	}
 
@@ -943,14 +953,14 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>555</sys_mod_count>
+        <sys_mod_count>607</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-28 12:58:31</sys_updated_on>
+        <sys_updated_on>2024-08-01 11:02:51</sys_updated_on>
         <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
