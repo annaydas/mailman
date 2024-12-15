@@ -2,311 +2,367 @@
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
         <client_script><![CDATA[api.controller = function($scope, spUtil, spModal, $window, $timeout, $mdToast, $mdDialog) {
-	/* widget controller */
-	var c = this;
-	c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
-	c.isMobile = spUtil.isMobile();
-	c.showPassword = false;
-	c.passInputType = 'password';
-	c.isRespWrapped = false;
-	c.isReqWrapped = false;
-	c.instanceID = spUtil.createUid('xxxxxxxx');
-	c.disablePrevBtn = true;
-	c.disableNextBtn = false;
-	c.redirectUrl = location.origin + '/mailman?id=oauth_redirect';
-	c.sliderHeaderArr = ["Request Headers", "Query Parameters"];
-	c.sliderHeader = c.sliderHeaderArr[0];
-
-	c.prevSlide = function() {
-		angular.element("div[instance='" + c.instanceID + "']")[0].swiper.slidePrev();
-	};
-
-	c.nextSlide = function() {
-		angular.element("div[instance='" + c.instanceID + "']")[0].swiper.slideNext();
-	};
-
-	c.onSlideChangeStart = function(swiper) {
-		c.disablePrevBtn = (swiper.isBeginning) ? true : false;
-		c.disableNextBtn = (swiper.isEnd) ? true : false;
-		c.sliderHeader = c.sliderHeaderArr[swiper.activeIndex];
-	};
-
-	$scope.$watch('c.data.queryParams', function(oldValue, newValue) {
-		var urlInputElem = $('#urlInput')[0];
-		var cursorPosition = urlInputElem.selectionStart;
-		var inputLength = urlInputElem.value.length;
-		var pos = cursorPosition;
-
-		if ((cursorPosition < inputLength) && (urlInputElem.value.charAt(cursorPosition - 1) == '=')){
-			pos = cursorPosition - 1;
-		}
-
-		if(c.data.endpointUrl){
-			var urlObj = new URL(c.data.endpointUrl);
-			var paramsObj = urlObj.searchParams;
-			urlObj.search = '';
-
-			c.data.queryParams.forEach(function (item){
-				paramsObj.set(item.key, item.value);
-			});
-
-			var urlStr = urlObj.toString();
-
-			if(urlStr.endsWith('=')){
-				urlStr = urlStr.substring(0, urlStr.lastIndexOf('='));
-			}
-
-			if(urlStr.includes('=&')){
-				urlStr = urlStr.replace('=&', '&');
-			}
-
-			c.data.endpointUrl = decodeURIComponent(urlStr);
-			$timeout(function (elem){
-				urlInputElem.setSelectionRange(pos, pos);
-			}, 50);
-
-		}
-	}, true);
-
-	c.updateQueryParamsObj = function () {
-		c.data.queryParams = [];
-		if(c.data.endpointUrl){
-			var urlObj = new URL(c.data.endpointUrl);
-			for(var [key, value] of urlObj.searchParams.entries()){
-				if(key || value){
-					c.data.queryParams.push({
-						"key": key,
-						"value": value,
-						"editingKey": false,
-						"editingValue": false
-					});
-				}
-				/*if(key && value){
-					var duplicateKey = c.data.queryParams.find(function (item) {
-						return item.key === key;
-					});
-
-					if(duplicateKey){
-						duplicateKey.value = value;
-					} else {
-						c.data.queryParams.push({
-							"key": key,
-							"value": value,
-							"editingKey": false,
-							"editingValue": false
-						});
-					}
-				}*/
-			}
-		} else {
-			//c.data.queryParams = [];
-		}
-	};
-
-	// Testing defaults
-	c.authUrl = 'https://accounts.spotify.com/authorize';
-	c.clientId = 'e64417be1bfc4ff896338d23dbb515bb';
-	c.clientSecret = '91dccc0320a7430982fb3f08110493c7';
-	c.tokenUrl = 'https://accounts.spotify.com/api/token';
-
-	c.openToast = function(msg, type) {
-		var colour = (type === 'success') ? '#00E676' : '#F44336';
-		$mdToast.show({
-			template: '<md-toast style="padding: 30px;">' +
-			'<div class="md-toast-content" style="border-left: 5px solid ' + colour + ';">' +
-			msg +
-			'</div>' +
-			'</md-toast>',
-			position: 'top right'
-		});
-	};
-
-	c.showHidePassword = function() {
-		c.showPassword = !c.showPassword;
-		c.passInputType = (c.showPassword) ? 'text' : 'password';
-	};
-
-	c.startEditing = function(item, elem, event) {
-
-		if (elem == 'key')
-			item.editingKey = true;
-		else if (elem == 'value')
-			item.editingValue = true;
-
-		var element = angular.element(event.currentTarget);
-		var parentTD = angular.element(element).parent();
-		$timeout(function(elem123) {
-			//console.log(elem123.children()[0].focus());
-		}, 50, true, parentTD);
-
-	};
-
-	c.doneEditing = function(item, elem, $event) {
-		if (elem == 'key')
-			item.editingKey = false;
-		else if (elem == 'value')
-			item.editingValue = false;
-	};
-
-	c.toggleLineWrap = function(event, elem) {
-
-		if (elem == 'req') {
-			c.isReqWrapped = !c.isReqWrapped;
-			angular.element('md-content#request-body')[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isReqWrapped);
-		} else if (elem == 'resp') {
-			c.isRespWrapped = !c.isRespWrapped;
-			angular.element('md-content#response-body')[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isRespWrapped);
-		}
-
-	};
-
-	c.submit = function() {
-
-		if (c.data.endpointUrl) {
-			var endpointUrl = c.data.endpointUrl;
-			var headersObj = {};
-			c.data.headersNew.forEach(function(header) {
-				headersObj[header.key] = header.value;
-			});
-
-			if (c.authType == 'basic') {
-				headersObj.Authorization = 'Basic ' + btoa(c.username + ':' + c.password);
-			} else if (c.authType == 'bearer') {
-				headersObj.Authorization = 'Bearer ' + c.token;
-			} else if (c.authType == 'apikey-header') {
-				headersObj[c.keyName] = c.keyValue;
-			} else if (c.authType == 'apikey-queryparams') {
-				var urlObj = new URL(endpointUrl);
-				urlObj.searchParams.append(c.keyName, c.keyValue);
-				endpointUrl = urlObj.href;
-			} else if (c.authType == 'none') {
-				//do nothing
-			}
-
-			c.server.get({
-				action: 'sendMessage',
-				method: c.data.methodName,
-				endpoint: endpointUrl,
-				headers: headersObj,
-				body: c.data.requestBody.value
-			}).then(function(resp) {
-				if(resp.data.exceptionMessage){
-					console.error("Mailman exception: " + resp.data.exceptionMessage);
-					c.openToast('Exception occured while executing the request. Check browser console for details.', 'error');
-					//c.openToast(resp.data.exceptionMessage, 'error');
-				} else {
-					c.data.responseBody.value = resp.data.responseBody;
-					c.data.statusFlag = resp.data.statusFlag;
-					c.data.httpStatus = resp.data.httpStatus;
-					c.data.responseTime = resp.data.responseTime;
-					spUtil.scrollTo('#response-body', 2000);
-				}
-			});
-		}
-	};
-
-	c.addEntry = function(key, value, manualInput, type) {
-
-		var arrName = '';
-		var keyModel = '';
-		var valueModel = '';
-		switch (type) {
-			case 'header':
-				arrName = 'headersNew';
-				keyModel = 'headerKey';
-				valueModel = 'headerValue';
-				break;
-			case 'queryParam':
-				arrName = 'queryParams';
-				keyModel = 'queryParamKey';
-				valueModel = 'queryParamValue';
-				break;
-		}
-
-		if (key && value) {
-
-			var found = false;
-			for (i = 0; i < c.data[arrName].length; i++) {
-				if (c.data[arrName][i].key == key) {
-					found = true;
-
-					if (key == 'Authorization') {
-						c.data[arrName][i].key = key;
-						c.data[arrName][i].value = value;
-					} else {
-						break;
-					}
-				}
-			}
-
-			if (!found) {
-				// Push the new item to the headers array
-				c.data[arrName].push({
-					"key": key,
-					"value": value,
-					"editingKey": false,
-					"editingValue": false
-				});
-
-				if (manualInput) {
-					//Clear the TextBoxes if manual input.
-					c[keyModel] = "";
-					c[valueModel] = "";
-				}
-			}
-		}
-
-	};
-
-	c.removeEntry = function(type, index) {
-
-		var arrName = '';
-		switch (type) {
-			case 'header':
-				arrName = 'headersNew';
-				break;
-			case 'queryParam':
-				arrName = 'queryParams';
-				break;
-		}
-
-		//Remove the item from Array using Index.
-		c.data[arrName].splice(index, 1);
-
-	};
-
-	c.getToken = function(grantType) {
-		if (grantType == 'authorization_code') {
-			c.runAuthCodeFlow();
-		} else if (grantType == 'client_credentials') {
-			c.callTokenEndpoint();
-		} else if (grantType == 'password') {
-			c.callTokenEndpoint(null, null, c.username, c.password);
-		}
-	};
-
-	c.runAuthCodeFlow = function() {
-		var state = crypto.randomUUID();
-		c.authCode = '';
-		var fullAuthURL = new URL(c.authUrl);
-		fullAuthURL.searchParams.set('response_type', 'code');
-		fullAuthURL.searchParams.set('client_id', c.clientId);
-		fullAuthURL.searchParams.set('redirect_uri', c.redirectUrl);
-		fullAuthURL.searchParams.set('state', state);
-		var oauthWindow = $window.open(fullAuthURL);
-
-		spUtil.recordWatch($scope, "x_792082_mailman_authorization_code", "state=" + state, function(response) {
-			oauthWindow.close();
-			if (response.data.record.code) {
-				c.authCode = response.data.record.code.value;
-				c.callTokenEndpoint(c.authCode, c.redirectUrl);
-			}
-		});
-
-	};
+    /* widget controller */
+    var c = this;
+    c.regex = "^(http[s]?:\/\/){1}(www\.){0,1}([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\-]+)(\.){0,1}(.+)$";
+    c.isMobile = spUtil.isMobile();
+    c.showPassword = false;
+    c.passInputType = 'password';
+    c.isRespWrapped = false;
+    c.isReqWrapped = false;
+    c.instanceID = spUtil.createUid('xxxxxxxx');
+    c.disablePrevBtn = true;
+    c.disableNextBtn = false;
+    c.redirectUrl = location.origin + '/mailman?id=oauth_redirect';
+    c.sliderHeaderArr = ["Request Headers", "Query Parameters"];
+    c.sliderHeader = c.sliderHeaderArr[0];
+    c.requestContentType = 'json';
+    var reqEditor, respEditor;
 
 
-	/*
+    c.loadEditors = function() {
+        $timeout(function() {
+            reqEditor = monaco.editor.create(document.getElementById("request-editor-" + c.instanceID), {
+                value: c.data.requestBody.value,
+                language: c.requestContentType,
+                wordWrap: c.isReqWrapped ? "on" : "off",
+                automaticLayout: true,
+                "autoIndent": true,
+                "formatOnPaste": true,
+                "formatOnType": true,
+                readOnly: false
+            });
+
+            reqEditor.onDidChangeModelContent(function(e) {
+                c.data.requestBody.value = reqEditor.getValue();
+            });
+
+            respEditor = monaco.editor.create(document.getElementById("response-editor-" + c.instanceID), {
+                value: c.data.responseBody.value,
+                language: 'json',
+                wordWrap: c.isRespWrapped ? "on" : "off",
+                automaticLayout: true,
+                "autoIndent": true,
+                "formatOnPaste": true,
+                "formatOnType": true,
+                readOnly: true
+            });
+
+        }, 100);
+    };
+
+    c.changeReqEditorLanguage = function() {
+        reqEditor.getModel().setLanguage(c.requestContentType);
+        setTimeout(function() {
+            reqEditor.getAction('editor.action.formatDocument').run();
+        }, 10);
+    }
+
+    c.prevSlide = function() {
+        angular.element("div[instance='" + c.instanceID + "']")[0].swiper.slidePrev();
+    };
+
+    c.nextSlide = function() {
+        angular.element("div[instance='" + c.instanceID + "']")[0].swiper.slideNext();
+    };
+
+    c.onSlideChangeStart = function(swiper) {
+        c.disablePrevBtn = (swiper.isBeginning) ? true : false;
+        c.disableNextBtn = (swiper.isEnd) ? true : false;
+        c.sliderHeader = c.sliderHeaderArr[swiper.activeIndex];
+    };
+
+    $scope.$watch('c.data.queryParams', function(oldValue, newValue) {
+        var urlInputElem = $('#urlInput')[0];
+        var cursorPosition = urlInputElem.selectionStart;
+        var inputLength = urlInputElem.value.length;
+        var pos = cursorPosition;
+
+        if ((cursorPosition < inputLength) && (urlInputElem.value.charAt(cursorPosition - 1) == '=')) {
+            pos = cursorPosition - 1;
+        }
+
+        if (c.data.endpointUrl) {
+            var urlObj = new URL(c.data.endpointUrl);
+            var paramsObj = urlObj.searchParams;
+            urlObj.search = '';
+
+            c.data.queryParams.forEach(function(item) {
+                paramsObj.set(item.key, item.value);
+            });
+
+            var urlStr = urlObj.toString();
+
+            if (urlStr.endsWith('=')) {
+                urlStr = urlStr.substring(0, urlStr.lastIndexOf('='));
+            }
+
+            if (urlStr.includes('=&')) {
+                urlStr = urlStr.replace('=&', '&');
+            }
+
+            c.data.endpointUrl = decodeURIComponent(urlStr);
+            $timeout(function(elem) {
+                urlInputElem.setSelectionRange(pos, pos);
+            }, 50);
+
+        }
+    }, true);
+
+    c.updateQueryParamsObj = function() {
+        c.data.queryParams = [];
+        if (c.data.endpointUrl) {
+            var urlObj = new URL(c.data.endpointUrl);
+            for (var [key, value] of urlObj.searchParams.entries()) {
+                if (key || value) {
+                    c.data.queryParams.push({
+                        "key": key,
+                        "value": value,
+                        "editingKey": false,
+                        "editingValue": false
+                    });
+                }
+                /*if(key && value){
+                	var duplicateKey = c.data.queryParams.find(function (item) {
+                		return item.key === key;
+                	});
+
+                	if(duplicateKey){
+                		duplicateKey.value = value;
+                	} else {
+                		c.data.queryParams.push({
+                			"key": key,
+                			"value": value,
+                			"editingKey": false,
+                			"editingValue": false
+                		});
+                	}
+                }*/
+            }
+        } else {
+            //c.data.queryParams = [];
+        }
+    };
+
+    // Testing defaults
+    c.authUrl = 'https://accounts.spotify.com/authorize';
+    c.clientId = 'e64417be1bfc4ff896338d23dbb515bb';
+    c.clientSecret = '91dccc0320a7430982fb3f08110493c7';
+    c.tokenUrl = 'https://accounts.spotify.com/api/token';
+
+    c.openToast = function(msg, type) {
+        var colour = (type === 'success') ? '#00E676' : '#F44336';
+        $mdToast.show({
+            template: '<md-toast style="padding: 30px;">' +
+                '<div class="md-toast-content" style="border-left: 5px solid ' + colour + ';">' +
+                msg +
+                '</div>' +
+                '</md-toast>',
+            position: 'top right'
+        });
+    };
+
+    c.showHidePassword = function() {
+        c.showPassword = !c.showPassword;
+        c.passInputType = (c.showPassword) ? 'text' : 'password';
+    };
+
+    c.startEditing = function(item, elem, event) {
+
+        if (elem == 'key')
+            item.editingKey = true;
+        else if (elem == 'value')
+            item.editingValue = true;
+
+        var element = angular.element(event.currentTarget);
+        var parentTD = angular.element(element).parent();
+        $timeout(function(elem123) {
+            //console.log(elem123.children()[0].focus());
+        }, 50, true, parentTD);
+
+    };
+
+    c.doneEditing = function(item, elem, $event) {
+        if (elem == 'key')
+            item.editingKey = false;
+        else if (elem == 'value')
+            item.editingValue = false;
+    };
+
+    c.toggleLineWrap = function(event, elem) {
+
+        if (elem == 'req') {
+            c.isReqWrapped = !c.isReqWrapped;
+            reqEditor.updateOptions({
+                wordWrap: c.isReqWrapped ? "on" : "off"
+            });
+            //angular.element('md-content#request-body')[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isReqWrapped);
+        } else if (elem == 'resp') {
+            c.isRespWrapped = !c.isRespWrapped;
+            respEditor.updateOptions({
+                wordWrap: c.isRespWrapped ? "on" : "off"
+            });
+            //angular.element('md-content#response-body')[0].children[1].children[1].CodeMirror.setOption('lineWrapping', c.isRespWrapped);
+        }
+
+    };
+
+    c.submit = function() {
+
+        if (c.data.endpointUrl) {
+            var endpointUrl = c.data.endpointUrl;
+            var headersObj = {};
+            c.data.headersNew.forEach(function(header) {
+                headersObj[header.key] = header.value;
+            });
+
+            if (c.authType == 'basic') {
+                headersObj.Authorization = 'Basic ' + btoa(c.username + ':' + c.password);
+            } else if (c.authType == 'bearer') {
+                headersObj.Authorization = 'Bearer ' + c.token;
+            } else if (c.authType == 'apikey-header') {
+                headersObj[c.keyName] = c.keyValue;
+            } else if (c.authType == 'apikey-queryparams') {
+                var urlObj = new URL(endpointUrl);
+                urlObj.searchParams.append(c.keyName, c.keyValue);
+                endpointUrl = urlObj.href;
+            } else if (c.authType == 'none') {
+                //do nothing
+            }
+
+            c.server.get({
+                action: 'sendMessage',
+                method: c.data.methodName,
+                endpoint: endpointUrl,
+                headers: headersObj,
+                body: c.data.requestBody.value
+            }).then(function(resp) {
+                if (resp.data.exceptionMessage) {
+                    console.error("Mailman exception: " + resp.data.exceptionMessage);
+                    c.openToast('Exception occured while executing the request. Check browser console for details.', 'error');
+                    //c.openToast(resp.data.exceptionMessage, 'error');
+                } else {
+
+                    c.data.responseType = resp.data.responseType;
+                    if (c.data.responseType == 'json' || c.data.responseType == 'text') {
+                        c.data.responseBody.value = resp.data.responseBody;
+                    } else if (c.data.responseType == 'xml') {
+                        c.data.responseBody.value = decode(prettifyXml(resp.data.responseBody));
+                        respEditor.getModel().setValue('');
+                    }
+                    respEditor.getModel().setValue(c.data.responseBody.value);
+                    respEditor.getModel().setLanguage(c.data.responseType);
+                    c.data.statusFlag = resp.data.statusFlag;
+                    c.data.httpStatus = resp.data.httpStatus;
+                    c.data.responseTime = resp.data.responseTime;
+                    spUtil.scrollTo('#response-body', 2000);
+                }
+            });
+        }
+    };
+
+    c.addEntry = function(key, value, manualInput, type) {
+
+        var arrName = '';
+        var keyModel = '';
+        var valueModel = '';
+        switch (type) {
+            case 'header':
+                arrName = 'headersNew';
+                keyModel = 'headerKey';
+                valueModel = 'headerValue';
+                break;
+            case 'queryParam':
+                arrName = 'queryParams';
+                keyModel = 'queryParamKey';
+                valueModel = 'queryParamValue';
+                break;
+        }
+
+        if (key && value) {
+
+            var found = false;
+            for (i = 0; i < c.data[arrName].length; i++) {
+                if (c.data[arrName][i].key == key) {
+                    found = true;
+
+                    if (key == 'Authorization') {
+                        c.data[arrName][i].key = key;
+                        c.data[arrName][i].value = value;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (!found) {
+                // Push the new item to the headers array
+                c.data[arrName].push({
+                    "key": key,
+                    "value": value,
+                    "editingKey": false,
+                    "editingValue": false
+                });
+
+                if (manualInput) {
+                    //Clear the TextBoxes if manual input.
+                    c[keyModel] = "";
+                    c[valueModel] = "";
+                }
+            }
+        }
+
+    };
+
+    c.removeEntry = function(type, index) {
+
+        var arrName = '';
+        switch (type) {
+            case 'header':
+                arrName = 'headersNew';
+                break;
+            case 'queryParam':
+                arrName = 'queryParams';
+                break;
+        }
+
+        //Remove the item from Array using Index.
+        c.data[arrName].splice(index, 1);
+
+    };
+
+    c.getToken = function(grantType) {
+        if (grantType == 'authorization_code') {
+            c.runAuthCodeFlow();
+        } else if (grantType == 'client_credentials') {
+            c.callTokenEndpoint();
+        } else if (grantType == 'password') {
+            c.callTokenEndpoint(null, null, c.username, c.password);
+        }
+    };
+
+    c.runAuthCodeFlow = function() {
+        var state = crypto.randomUUID();
+        c.authCode = '';
+        var fullAuthURL = new URL(c.authUrl);
+        fullAuthURL.searchParams.set('response_type', 'code');
+        fullAuthURL.searchParams.set('client_id', c.clientId);
+        fullAuthURL.searchParams.set('redirect_uri', c.redirectUrl);
+        fullAuthURL.searchParams.set('state', state);
+        var oauthWindow = $window.open(fullAuthURL);
+
+        spUtil.recordWatch($scope, "x_792082_mailman_authorization_code", "state=" + state, function(response) {
+            oauthWindow.close();
+            if (response.data.record.code) {
+                c.authCode = response.data.record.code.value;
+                c.callTokenEndpoint(c.authCode, c.redirectUrl);
+            }
+        });
+
+    };
+
+
+    /*
     c.runAuthCodeFlow = function () {
     	c.authCode = '';
     	var fullAuthURL = new URL(c.authUrl);
@@ -344,488 +400,521 @@
     };
     */
 
-	c.callTokenEndpoint = function(authCode, redirectUrl, username, password) {
-		var urlencoded = new URLSearchParams();
-		if (authCode) {
-			urlencoded.append("code", authCode);
-		}
-		if (redirectUrl) {
-			urlencoded.append("redirect_uri", redirectUrl);
-		}
-		if (username) {
-			urlencoded.append("username", username);
-		}
-		if (password) {
-			urlencoded.append("password", password);
-		}
-		urlencoded.append("client_id", c.clientId);
-		urlencoded.append("client_secret", c.clientSecret);
-		urlencoded.append("grant_type", c.grantType);
+    c.callTokenEndpoint = function(authCode, redirectUrl, username, password) {
+        var urlencoded = new URLSearchParams();
+        if (authCode) {
+            urlencoded.append("code", authCode);
+        }
+        if (redirectUrl) {
+            urlencoded.append("redirect_uri", redirectUrl);
+        }
+        if (username) {
+            urlencoded.append("username", username);
+        }
+        if (password) {
+            urlencoded.append("password", password);
+        }
+        urlencoded.append("client_id", c.clientId);
+        urlencoded.append("client_secret", c.clientSecret);
+        urlencoded.append("grant_type", c.grantType);
 
 
-		c.server.get({
-			action: 'callTokenUrl',
-			token_url: c.tokenUrl,
-			requestBody: urlencoded.toString()
-		}).then(function(resp) {
-			if (resp.data.tokenFound == true) {
-				c.data.access_token = resp.data.access_token;
-				c.data.refresh_token = resp.data.refresh_token;
-				c.data.token_type = resp.data.token_type;
-				c.data.expires_in = resp.data.expires_in;
-				c.useToken(c.data.access_token);
-			}
-		});
-	};
+        c.server.get({
+            action: 'callTokenUrl',
+            token_url: c.tokenUrl,
+            requestBody: urlencoded.toString()
+        }).then(function(resp) {
+            if (resp.data.tokenFound == true) {
+                c.data.access_token = resp.data.access_token;
+                c.data.refresh_token = resp.data.refresh_token;
+                c.data.token_type = resp.data.token_type;
+                c.data.expires_in = resp.data.expires_in;
+                c.useToken(c.data.access_token);
+            }
+        });
+    };
 
-	c.useToken = function(accessToken) {
-		accessToken = accessToken ? accessToken : c.data.access_token;
-		c.addEntry('Authorization', 'Bearer ' + accessToken, false, 'header');
-	};
+    c.useToken = function(accessToken) {
+        accessToken = accessToken ? accessToken : c.data.access_token;
+        c.addEntry('Authorization', 'Bearer ' + accessToken, false, 'header');
+    };
 
-	c.copy = function(str, source) {
-		if (str) {
-			navigator.clipboard.writeText(str).then(function(resp) {
-				$timeout(function() {
-					var prefix = (source == 'req') ? 'Request' : 'Response';
-					c.openToast(prefix + ' copied to clipboard.', 'success');
-				});
-			});
-		} else {
-			c.openToast('Nothing to copy.', 'error');
-		}
-	};
+    c.copy = function(str, source) {
+        if (str) {
+            navigator.clipboard.writeText(str).then(function(resp) {
+                $timeout(function() {
+                    var prefix = (source == 'req') ? 'Request' : 'Response';
+                    c.openToast(prefix + ' copied to clipboard.', 'success');
+                });
+            });
+        } else {
+            c.openToast('Nothing to copy.', 'error');
+        }
+    };
 
-	c.openJCModal = function(ev, respObj) {
+    function prettifyXml(sourceXml) {
+        var xmlDoc = new DOMParser().parseFromString(sourceXml, 'text/xml');
+        var xsltDoc = new DOMParser().parseFromString([
+            // describes how we want to modify the XML - indent everything
+            '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
+            '  <xsl:strip-space elements="*"/>',
+            '  <xsl:template match="para[content-style][not(text())]">', // change to just text() to strip space in text nodes
+            '    <xsl:value-of select="normalize-space(.)"/>',
+            '  </xsl:template>',
+            '  <xsl:template match="node()|@*">',
+            '    <xsl:copy><xsl:apply-templates select="node()|@*"/></xsl:copy>',
+            '  </xsl:template>',
+            '  <xsl:output indent="yes"/>',
+            '</xsl:stylesheet>',
+        ].join('\n'), 'application/xml');
 
-		$mdDialog.show({
-			controller: DialogController,
-			controllerAs: 'c',
-			template: '<md-dialog class="dialog-no-shadow">' +
-			'	<md-dialog-content class="md-dialog-content">' +
-			'		<h2 class="md-headline">Do you want to open Diagram View?</h2>' +
-			'		<div class="md-dialog-content md-subhead no-left-padding"><b>Caution:</b> This will send the data object to a third-party/external system (JSONCrack).</div>' +
-			'	</md-dialog-content>' +
-			'	<md-dialog-actions>' +
-			'		<md-button ng-click="c.cancel()" class="md-warn dialog-button-no-shadow">' +
-			'   	Cancel' +
-			'		</md-button>' +
-			'		<md-button ng-click="c.hide()" class="md-primary md-raised dialog-button-no-shadow">' +
-			'			Proceed' +
-			'		</md-button>' +
-			'	</md-dialog-actions>' +
-			'</md-dialog>' +
-			'<style>' +
-			'	.dialog-no-shadow:focus {border: none !important; box-shadow: 0 7px 8px -4px rgba(0,0,0,.2),0 13px 19px 2px rgba(0,0,0,.14),0 5px 24px 4px rgba(0,0,0,.12) !important;}' +
-			'	.dialog-button-no-shadow:focus {border: none !important; box-shadow: none !important;}' +
-			'	.no-left-padding {padding-left: 0 !important;}' +
-			'</style>',
-			parent: angular.element(document.body),
-			targetEvent: ev,
-			clickOutsideToClose: true
-		}).then(function() {
-			spModal.open({
-				title: 'Diagram View',
-				widget: 'json_crack',
-				widgetInput: {
-					'obj': respObj,
-					'theme': 'light',
-					'direction': 'RIGHT'
-				},
-				size: 'lg',
-				//noDismiss: true,
-				buttons: [{
-					label: '${Ok}',
-					primary: true
-				}],
-				headerStyle: {
-					'background': '#3f51b5',
-					'color': 'white',
-					'border-top-left-radius': '5px',
-					'border-top-right-radius': '5px'
-				}
-			});
+        var xsltProcessor = new XSLTProcessor();
+        xsltProcessor.importStylesheet(xsltDoc);
+        var resultDoc = xsltProcessor.transformToDocument(xmlDoc);
+        var resultXml = new XMLSerializer().serializeToString(resultDoc);
+        return resultXml;
+    }
 
-		}, function() {
-			// Cancel button clicked
-		});
+    function decode(input) {
+        return input.replace(/&apos;/g, "'")
+            .replace(/&quot;/g, '"')
+            .replace(/&gt;/g, '>')
+            .replace(/&lt;/g, '<')
+            .replace(/&amp;/g, '&');
+    }
 
-		function DialogController($mdDialog) {
-			this.hide = function() {
-				$mdDialog.hide();
-			};
+    c.openJCModal = function(ev, respObj) {
 
-			this.cancel = function() {
-				$mdDialog.cancel();
-			};
+        $mdDialog.show({
+            controller: DialogController,
+            controllerAs: 'c',
+            template: '<md-dialog class="dialog-no-shadow">' +
+                '	<md-dialog-content class="md-dialog-content">' +
+                '		<h2 class="md-headline">Do you want to open Diagram View?</h2>' +
+                '		<div class="md-dialog-content md-subhead no-left-padding"><b>Caution:</b> This will send the data object to a third-party/external system (JSONCrack).</div>' +
+                '	</md-dialog-content>' +
+                '	<md-dialog-actions>' +
+                '		<md-button ng-click="c.cancel()" class="md-warn dialog-button-no-shadow">' +
+                '   	Cancel' +
+                '		</md-button>' +
+                '		<md-button ng-click="c.hide()" class="md-primary md-raised dialog-button-no-shadow">' +
+                '			Proceed' +
+                '		</md-button>' +
+                '	</md-dialog-actions>' +
+                '</md-dialog>' +
+                '<style>' +
+                '	.dialog-no-shadow:focus {border: none !important; box-shadow: 0 7px 8px -4px rgba(0,0,0,.2),0 13px 19px 2px rgba(0,0,0,.14),0 5px 24px 4px rgba(0,0,0,.12) !important;}' +
+                '	.dialog-button-no-shadow:focus {border: none !important; box-shadow: none !important;}' +
+                '	.no-left-padding {padding-left: 0 !important;}' +
+                '</style>',
+            parent: angular.element(document.body),
+            targetEvent: ev,
+            clickOutsideToClose: true
+        }).then(function() {
+            spModal.open({
+                title: 'Diagram View',
+                widget: 'json_crack',
+                widgetInput: {
+                    'obj': respObj,
+                    'theme': 'light',
+                    'direction': 'RIGHT'
+                },
+                size: 'lg',
+                //noDismiss: true,
+                buttons: [{
+                    label: '${Ok}',
+                    primary: true
+                }],
+                headerStyle: {
+                    'background': '#3f51b5',
+                    'color': 'white',
+                    'border-top-left-radius': '5px',
+                    'border-top-right-radius': '5px'
+                }
+            });
 
-		}
+        }, function() {
+            // Cancel button clicked
+        });
 
-	};
+        function DialogController($mdDialog) {
+            this.hide = function() {
+                $mdDialog.hide();
+            };
+
+            this.cancel = function() {
+                $mdDialog.cancel();
+            };
+
+        }
+
+    };
 
 };]]></client_script>
         <controller_as>c</controller_as>
-        <css>@media (max-width: 959px) {
-  #mm-widget-container {
-    font-size: 14px;
-  }
-}
-
-@media (min-width: 960px) {
-  #mm-widget-container {
-    font-size: 16px;
-  }
-}
-
-#mm-widget-container {
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
-.btn-disabled {
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.swiper-slide {
-  font-size: initial;
-  text-align: initial;
-}
-
-input:focus, button:focus, md-chips-wrap {
-  box-shadow: none !important;
-}
-
-.remove-shadow:focus, md-chips-wrap:focus, md-dialog-content {
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.layout-row {
-  gap: 10px;
-}  
-
-.filler-icon {
-  display: flex;
-  background: lightgray;
-  min-width: 54.06px;
-  max-width: 54.06px;
-}
-
-.filler-icon &gt; md-icon {
-  color: $brand-primary !important;
-}
-
-.align-pwd-icon {
-  align-self: center;
-  margin-top: -10px;
-}
-
-*:not(.glyphicon){
-  font-family: 'Ubuntu Mono', monospace;
-}
-
-.material-icons {
-  font-family: 'Material Icons';
-}
-
-
-.ig-elem1, .ig-elem2, .ig-elem4 {
-  height: 4rem;
-}
-
-.margin-8-column-16 {
-  margin: 8px;
-  gap: 16px;
-}
-
-.margin-left-right-6 {
-  margin: 0 6px;
-}
-
-.btn[disabled] {
-  opacity: 1;
-}
-
-.btn-pnl &gt; a {
-  color: inherit;
-}
-
-.glyphicon-stats {
-  margin-right: 10px;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.my-group .ig-elem1 {
-  width: 25%;
-  background-color: $brand-primary;
-  color: white;
-}
-
-.vertical-middle {
-  vertical-align: middle;
-}
-
-.no-bottom-margin {
-  margin-bottom: 0px;
-}
-
-.top-margin-10 {
-  margin-top: 10px;
-}
-
-.top-margin-neg-20 {
-  margin-top: -20px;
-}
-
-.my-group .ig-elem2 {
-  width: 75%;
-}
-
-.no-left-right-padding {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-#inputKey {
-  padding: 8px;
-}
-
-.panel-title {
-  font-weight: bold;
-  font-size: 1.7rem;
-}
-
-.bg-edit {
-  background: #FFF4A3;
-}
-
-textarea {
-  height: 161px;
-  width: 100%;
-  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
-  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
-  box-sizing: border-box;         /* Opera/IE 8+ */
-  border: none;
-  resize: none;
-}
-
-.pop-class {
-  background: white;
-  color: $brand-primary;
-}
-
-.no-padding {
-  padding: 0;
-}
-
-#remove-header-icon {
-  color: red;
-}
-
-#remove-header-icon {
-  color: darkgreen;
-}
-
-td
-{
-  max-width: 100px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal;
-  overflow-wrap: break-word;
-}
-
-.full-span {
-  display: block;
-}
-
-.editable-input {
-  width: 100%;
-  border: none;
-  background: #FFF4A3;
-}
-
-.editable-input:focus {
-  box-shadow: none;
-}
-
-.iframe-preview {
-  width: 100%;
-  height: 100%;
-  padding-top: 5px;
-  border: none;
-}
-
-.footer-height {
-  height: 20px;
-}
-
-.max-height-250 {
-  max-height: 250px;
-}
-
-
-/* Scrollbar CSS */
-/* width */
-::-webkit-scrollbar {
-  width: 8px;
-
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: $brand-primary;
-  border-radius: 5px; 
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: lighten($brand-primary, 10%);  
-}
-
-
-/* above each code section */
-.minibar {
-  padding: 2px;
-
-  .btn {
-    border: none;
-  }
-}
-
-input[type=checkbox] {
-  margin-right: .25em;
-}
-
-.check {
-  white-space: nowrap;
-  margin-bottom: 0;
-  margin-left: 1rem;
-}
-
-.CodeMirror {
-  border-radius: 0px 0px 5px 5px;
-  border: none;
-  height: 250px;
-}
-
-.CodeMirror-hscrollbar {
-  height: 8px;
-}
-
-pre.CodeMirror-line {
-  font-size: 14px !important;
-}
-
-.animate {
-  transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
-  -webkit-transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
-}
-
-
-.relative {
-  position: relative;
-}
-
-.button-nav {
-  .btn-group {
-    margin-left: 0.5rem;
-  }
-
-  button {
-    min-width: 40px;
-  }
-}
-
-.doc {
-  overflow: auto;
-  width: 98%;
-}
-
-.doc-icons {
-  position: absolute;
-  padding: 5px;
-  right: 0px;
-}
-
-.dropdown-icon {
-  padding-right: 10px;
-}
-
-.sp-dep {
-  width: 200px;
-}
-
-.read-only-message {
-  text-align: center;
-
-  .alert {
-    display: inline-block;
-    margin-bottom: 10px;
-  }
-
-}
-
-.cm-s-snc_readonly { background-color: #e6e8ea; color: #444444; }
-
-.cm-s-snc_readonly_readonly span.cm-meta { color: #FF1717; }
-
-.cm-s-snc_readonly span.cm-keyword { font-weight: bold; color: #7F0055; }
-
-.cm-s-snc_readonly span.cm-atom { color: #219; }
-
-.cm-s-snc_readonly span.cm-number { color: #164; }
-
-.cm-s-snc_readonly span.cm-def { color: #00f; }
-
-.cm-s-snc_readonly span.cm-variable { color: black; }
-
-.cm-s-snc_readonly span.cm-variable-2 { color: #0000C0; }
-
-.cm-s-snc_readonly span.cm-variable-3 { color: #0000C0; }
-
-.cm-s-snc_readonly span.cm-property { color: black; }
-
-.cm-s-snc_readonly span.cm-operator { color: black; }
-
-.cm-s-snc_readonly span.cm-comment { color: #3F7F5F; }
-
-.cm-s-snc_readonly span.cm-string { color: #2A00FF; }
-
-.cm-s-snc_readonly span.cm-string-2 { color: #f50; }
-
-.cm-s-snc_readonly span.cm-error { color: #f00; }
-
-.cm-s-snc_readonly span.cm-qualifier { color: #555; }
-
-.cm-s-snc_readonly span.cm-builtin { color: #30a; }
-
-.cm-s-snc_readonly span.cm-bracket { color: #cc7; }
-
-.cm-s-snc_readonly span.cm-tag { color: #170; }
-
-.cm-s-snc_readonly span.cm-attribute { color: #00c; }
-
-.cm-s-snc_readonly span.cm-link { color: #219; }
-
-.cm-s-snc_readonly .CodeMirror-matchingbracket {
-  color: OrangeRed !important;;
-}
-
-// readonly
-[role="editor-container"][data-readonly="true"] {
-  .CodeMirror {
-    background-color: #F7F7F7 !important;
-  }
+        <css>@media (max-width: 959px) {&#13;
+  #mm-widget-container {&#13;
+    font-size: 14px;&#13;
+  }&#13;
+}&#13;
+&#13;
+@media (min-width: 960px) {&#13;
+  #mm-widget-container {&#13;
+    font-size: 16px;&#13;
+  }&#13;
+}&#13;
+&#13;
+#mm-widget-container {&#13;
+  margin-top: 20px;&#13;
+  margin-bottom: 20px;&#13;
+}&#13;
+&#13;
+.btn-disabled {&#13;
+  cursor: not-allowed;&#13;
+  pointer-events: none;&#13;
+}&#13;
+&#13;
+.swiper-slide {&#13;
+  font-size: initial;&#13;
+  text-align: initial;&#13;
+}&#13;
+&#13;
+input:focus, button:focus, md-chips-wrap {&#13;
+  box-shadow: none !important;&#13;
+}&#13;
+&#13;
+.remove-shadow:focus, md-chips-wrap:focus, md-dialog-content {&#13;
+  border: none !important;&#13;
+  box-shadow: none !important;&#13;
+}&#13;
+&#13;
+.layout-row {&#13;
+  gap: 10px;&#13;
+}  &#13;
+&#13;
+.filler-icon {&#13;
+  display: flex;&#13;
+  background: lightgray;&#13;
+  min-width: 64px;&#13;
+  max-width: 64px;&#13;
+}&#13;
+&#13;
+.filler-icon &gt; md-icon {&#13;
+  color: $brand-primary !important;&#13;
+}&#13;
+&#13;
+.align-pwd-icon {&#13;
+  align-self: center;&#13;
+  margin-top: -10px;&#13;
+}&#13;
+&#13;
+/*&#13;
+*:not(.glyphicon){&#13;
+  font-family: 'Ubuntu Mono', monospace;&#13;
+}&#13;
+*/&#13;
+&#13;
+.material-icons {&#13;
+  font-family: 'Material Icons';&#13;
+}&#13;
+&#13;
+&#13;
+.ig-elem1, .ig-elem2, .ig-elem4 {&#13;
+  height: 4rem;&#13;
+}&#13;
+&#13;
+.margin-8-column-16 {&#13;
+  margin: 8px;&#13;
+  gap: 16px;&#13;
+}&#13;
+&#13;
+.margin-left-right-6 {&#13;
+  margin: 0 6px;&#13;
+}&#13;
+&#13;
+.btn[disabled] {&#13;
+  opacity: 1;&#13;
+}&#13;
+&#13;
+.btn-pnl &gt; a {&#13;
+  color: inherit;&#13;
+}&#13;
+&#13;
+.glyphicon-stats {&#13;
+  margin-right: 10px;&#13;
+}&#13;
+&#13;
+.full-width {&#13;
+  width: 100%;&#13;
+}&#13;
+&#13;
+.my-group .ig-elem1 {&#13;
+  width: 25%;&#13;
+  background-color: $brand-primary;&#13;
+  color: white;&#13;
+}&#13;
+&#13;
+.vertical-middle {&#13;
+  vertical-align: middle;&#13;
+}&#13;
+&#13;
+.no-bottom-margin {&#13;
+  margin-bottom: 0px;&#13;
+}&#13;
+&#13;
+.top-margin-10 {&#13;
+  margin-top: 10px;&#13;
+}&#13;
+&#13;
+.top-margin-neg-20 {&#13;
+  margin-top: -20px;&#13;
+}&#13;
+&#13;
+.my-group .ig-elem2 {&#13;
+  width: 75%;&#13;
+}&#13;
+&#13;
+.no-left-right-padding {&#13;
+  padding-left: 0;&#13;
+  padding-right: 0;&#13;
+}&#13;
+&#13;
+#inputKey {&#13;
+  padding: 8px;&#13;
+}&#13;
+&#13;
+.panel-title {&#13;
+  font-weight: bold;&#13;
+  font-size: 1.7rem;&#13;
+}&#13;
+&#13;
+.bg-edit {&#13;
+  background: #FFF4A3;&#13;
+}&#13;
+&#13;
+textarea {&#13;
+  height: 161px;&#13;
+  width: 100%;&#13;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */&#13;
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */&#13;
+  box-sizing: border-box;         /* Opera/IE 8+ */&#13;
+  border: none;&#13;
+  resize: none;&#13;
+}&#13;
+&#13;
+.pop-class {&#13;
+  background: white;&#13;
+  color: $brand-primary;&#13;
+}&#13;
+&#13;
+.no-padding {&#13;
+  padding: 0;&#13;
+}&#13;
+&#13;
+#remove-header-icon {&#13;
+  color: red;&#13;
+}&#13;
+&#13;
+#remove-header-icon {&#13;
+  color: darkgreen;&#13;
+}&#13;
+&#13;
+td&#13;
+{&#13;
+  max-width: 100px;&#13;
+  overflow: hidden;&#13;
+  text-overflow: ellipsis;&#13;
+  white-space: normal;&#13;
+  overflow-wrap: break-word;&#13;
+}&#13;
+&#13;
+.full-span {&#13;
+  display: block;&#13;
+}&#13;
+&#13;
+.editable-input {&#13;
+  width: 100%;&#13;
+  border: none;&#13;
+  background: #FFF4A3;&#13;
+}&#13;
+&#13;
+.editable-input:focus {&#13;
+  box-shadow: none;&#13;
+}&#13;
+&#13;
+.iframe-preview {&#13;
+  width: 100%;&#13;
+  height: 100%;&#13;
+  padding-top: 5px;&#13;
+  border: none;&#13;
+}&#13;
+&#13;
+.footer-height {&#13;
+  height: 20px;&#13;
+}&#13;
+&#13;
+.max-height-250 {&#13;
+  max-height: 250px;&#13;
+}&#13;
+&#13;
+&#13;
+/* Scrollbar CSS */&#13;
+/* width */&#13;
+::-webkit-scrollbar {&#13;
+  width: 8px;&#13;
+&#13;
+}&#13;
+&#13;
+/* Track */&#13;
+::-webkit-scrollbar-track {&#13;
+  background: #f1f1f1;&#13;
+}&#13;
+&#13;
+/* Handle */&#13;
+::-webkit-scrollbar-thumb {&#13;
+  background: $brand-primary;&#13;
+  border-radius: 5px; &#13;
+}&#13;
+&#13;
+/* Handle on hover */&#13;
+::-webkit-scrollbar-thumb:hover {&#13;
+  background: lighten($brand-primary, 10%);  &#13;
+}&#13;
+&#13;
+&#13;
+/* above each code section */&#13;
+.minibar {&#13;
+  padding: 2px;&#13;
+&#13;
+  .btn {&#13;
+    border: none;&#13;
+  }&#13;
+}&#13;
+&#13;
+input[type=checkbox] {&#13;
+  margin-right: .25em;&#13;
+}&#13;
+&#13;
+.check {&#13;
+  white-space: nowrap;&#13;
+  margin-bottom: 0;&#13;
+  margin-left: 1rem;&#13;
+}&#13;
+&#13;
+.CodeMirror {&#13;
+  border-radius: 0px 0px 5px 5px;&#13;
+  border: none;&#13;
+  height: 250px;&#13;
+}&#13;
+&#13;
+.CodeMirror-hscrollbar {&#13;
+  height: 8px;&#13;
+}&#13;
+&#13;
+pre.CodeMirror-line {&#13;
+  font-size: 14px !important;&#13;
+}&#13;
+&#13;
+.animate {&#13;
+  transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);&#13;
+  -webkit-transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);&#13;
+}&#13;
+&#13;
+&#13;
+.relative {&#13;
+  position: relative;&#13;
+}&#13;
+&#13;
+.button-nav {&#13;
+  .btn-group {&#13;
+    margin-left: 0.5rem;&#13;
+  }&#13;
+&#13;
+  button {&#13;
+    min-width: 40px;&#13;
+  }&#13;
+}&#13;
+&#13;
+.doc {&#13;
+  overflow: auto;&#13;
+  width: 98%;&#13;
+}&#13;
+&#13;
+.doc-icons {&#13;
+  position: absolute;&#13;
+  padding: 5px;&#13;
+  right: 0px;&#13;
+}&#13;
+&#13;
+.dropdown-icon {&#13;
+  padding-right: 10px;&#13;
+}&#13;
+&#13;
+.sp-dep {&#13;
+  width: 200px;&#13;
+}&#13;
+&#13;
+.read-only-message {&#13;
+  text-align: center;&#13;
+&#13;
+  .alert {&#13;
+    display: inline-block;&#13;
+    margin-bottom: 10px;&#13;
+  }&#13;
+&#13;
+}&#13;
+&#13;
+.cm-s-snc_readonly { background-color: #e6e8ea; color: #444444; }&#13;
+&#13;
+.cm-s-snc_readonly_readonly span.cm-meta { color: #FF1717; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-keyword { font-weight: bold; color: #7F0055; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-atom { color: #219; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-number { color: #164; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-def { color: #00f; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-variable { color: black; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-variable-2 { color: #0000C0; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-variable-3 { color: #0000C0; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-property { color: black; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-operator { color: black; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-comment { color: #3F7F5F; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-string { color: #2A00FF; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-string-2 { color: #f50; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-error { color: #f00; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-qualifier { color: #555; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-builtin { color: #30a; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-bracket { color: #cc7; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-tag { color: #170; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-attribute { color: #00c; }&#13;
+&#13;
+.cm-s-snc_readonly span.cm-link { color: #219; }&#13;
+&#13;
+.cm-s-snc_readonly .CodeMirror-matchingbracket {&#13;
+  color: OrangeRed !important;;&#13;
+}&#13;
+&#13;
+// readonly&#13;
+[role="editor-container"][data-readonly="true"] {&#13;
+  .CodeMirror {&#13;
+    background-color: #F7F7F7 !important;&#13;
+  }&#13;
 }</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
@@ -844,108 +933,115 @@ pre.CodeMirror-line {
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
-	/* populate the 'data' object */
-	/* e.g., data.table = $sp.getValue('table'); */
+    /* populate the 'data' object */
+    /* e.g., data.table = $sp.getValue('table'); */
 
-	if (!input) {
+    if (!input) {
 
-		data.headersNew = [{
-			"key": "Content-Type",
-			"value": "application/json",
-			"editingKey": false,
-			"editingValue": false
-		}, {
-			"key": "Accept",
-			"value": "application/json",
-			"editingKey": false,
-			"editingValue": false
-		}];
+        data.headersNew = [{
+            "key": "Content-Type",
+            "value": "application/json",
+            "editingKey": false,
+            "editingValue": false
+        }, {
+            "key": "Accept",
+            "value": "application/json",
+            "editingKey": false,
+            "editingValue": false
+        }];
 
-		data.queryParams = [];
+        data.queryParams = [];
 
-		data.responseBody = {
-			"value": JSON.stringify({}, null, 4)
-		};
+        data.responseBody = {
+            "value": "" //JSON.stringify({}, null, 4)
+        };
 
-		data.requestBody = {
-			"value": JSON.stringify({}, null, 4)
-		};
-	} else {
+        data.requestBody = {
+            "value": "" //JSON.stringify({}, null, 4)
+        };
+    } else {
 
-		if (input.preloadsaveddata == 'true') {
-			data.methodName = input.methodname;
-			data.endpointUrl = input.endpointurl;
-			data.headersNew = input.headersnew;
-			data.requestBody = input.requestbody;
-			data.responseBody = input.responsebody;
-			data.statusFlag = input.statusflag;
-			data.httpStatus = input.httpstatus;
-		}
-	}
+        if (input.preloadsaveddata == 'true') {
+            data.methodName = input.methodname;
+            data.endpointUrl = input.endpointurl;
+            data.headersNew = input.headersnew;
+            data.requestBody = input.requestbody;
+            data.responseBody = input.responsebody;
+            data.statusFlag = input.statusflag;
+            data.httpStatus = input.httpstatus;
+        }
+    }
 
-	if (input && input.action == 'sendMessage') {
+    if (input && input.action == 'sendMessage') {
 
-		var startTime, endTime;
-		try {
+        var startTime, endTime;
+        try {
 
-			startTime = new GlideDateTime().getNumericValue();
+            startTime = new GlideDateTime().getNumericValue();
 
-			var r = new sn_ws.RESTMessageV2();
-			r.setEndpoint(input.endpoint);
-			r.setHttpMethod(input.method);
-			for (var key in input.headers) {
-				r.setRequestHeader(key, input.headers[key]);
-			}
+            var r = new sn_ws.RESTMessageV2();
+            r.setEndpoint(input.endpoint);
+            r.setHttpMethod(input.method);
+            for (var key in input.headers) {
+                r.setRequestHeader(key, input.headers[key]);
+            }
 
-			if (input.body) {
-				r.setRequestBody(input.body);
-			}
+            if (input.body) {
+                r.setRequestBody(input.body);
+            }
 
-			var response = r.execute();
-			endTime = new GlideDateTime().getNumericValue();
-			data.httpStatus = response.getStatusCode();
+            var response = r.execute();
+            endTime = new GlideDateTime().getNumericValue();
+            data.httpStatus = response.getStatusCode();
+            var responseBody = response.getBody();
 
-			if (data.httpStatus >= 200 && data.httpStatus <= 299)
-				data.statusFlag = true;
-			else
-				data.statusFlag = false;
+            if (data.httpStatus >= 200 && data.httpStatus <= 299)
+                data.statusFlag = true;
+            else
+                data.statusFlag = false;
 
-			try {
-				data.responseBody = JSON.stringify(JSON.parse(response.getBody()), null, 4);
-			} catch (e) {
-				data.responseBody = response.getBody();
-			}
+            try {
+                data.responseType = response.getHeader("Content-Type").match(/\/(.*?)(?:;|$)/)[1];
+                if (data.responseType == 'json') {
+                    data.responseBody = JSON.stringify(JSON.parse(responseBody), null, 4);
+                } else if (data.responseType == 'xml') {
+                    data.responseBody = responseBody;
+                }
+            } catch (e) {
+                data.responseType = 'text';
+                data.responseBody = responseBody;
+            }
 
-			data.responseTime = endTime - startTime;
+            data.responseTime = endTime - startTime;
 
-		} catch (ex) {
-			if (!endTime) {
-				endTime = new GlideDateTime().getNumericValue();
-				data.responseTime = endTime - startTime;
-			}
-			data.exceptionMessage = ex.message;
-		}
-	}
+        } catch (ex) {
+            if (!endTime) {
+                endTime = new GlideDateTime().getNumericValue();
+                data.responseTime = endTime - startTime;
+            }
+            data.exceptionMessage = ex.message;
+        }
+    }
 
-	if (input && input.action == 'callTokenUrl') {
-		var tokenReq = new sn_ws.RESTMessageV2();
-		tokenReq.setEndpoint(input.token_url);
-		tokenReq.setHttpMethod('POST');
-		tokenReq.setRequestBody(input.requestBody);
-		tokenReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		var tokenResp = tokenReq.execute();
-		data.tokenRespStatus = tokenResp.getStatusCode();
-		if (data.tokenRespStatus >= 200 && data.tokenRespStatus <= 299) {
-			data.tokenFound = true;
-			var tokenRespBody = JSON.parse(tokenResp.getBody());
-			data.access_token = tokenRespBody.access_token;
-			data.refresh_token = tokenRespBody.refresh_token;
-			data.token_type = tokenRespBody.token_type;
-			data.expires_in = tokenRespBody.expires_in;
-		} else {
-			data.tokenFound = false;
-		}
-	}
+    if (input && input.action == 'callTokenUrl') {
+        var tokenReq = new sn_ws.RESTMessageV2();
+        tokenReq.setEndpoint(input.token_url);
+        tokenReq.setHttpMethod('POST');
+        tokenReq.setRequestBody(input.requestBody);
+        tokenReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        var tokenResp = tokenReq.execute();
+        data.tokenRespStatus = tokenResp.getStatusCode();
+        if (data.tokenRespStatus >= 200 && data.tokenRespStatus <= 299) {
+            data.tokenFound = true;
+            var tokenRespBody = JSON.parse(tokenResp.getBody());
+            data.access_token = tokenRespBody.access_token;
+            data.refresh_token = tokenRespBody.refresh_token;
+            data.token_type = tokenRespBody.token_type;
+            data.expires_in = tokenRespBody.expires_in;
+        } else {
+            data.tokenFound = false;
+        }
+    }
 
 })();]]></script>
         <servicenow>false</servicenow>
@@ -953,18 +1049,22 @@ pre.CodeMirror-line {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-10-21 18:20:01</sys_created_on>
         <sys_id>ace52c9197ce311056e8b3e6f053afb8</sys_id>
-        <sys_mod_count>607</sys_mod_count>
+        <sys_mod_count>651</sys_mod_count>
         <sys_name>Mailman Widget New</sys_name>
         <sys_package display_value="Mailman" source="x_792082_mailman">2cb32afe970be51056e8b3e6f053af7e</sys_package>
         <sys_policy/>
         <sys_scope display_value="Mailman">2cb32afe970be51056e8b3e6f053af7e</sys_scope>
         <sys_update_name>sp_widget_ace52c9197ce311056e8b3e6f053afb8</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-01 11:02:51</sys_updated_on>
-        <template><![CDATA[<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <sys_updated_on>2024-12-15 18:06:16</sys_updated_on>
+        <template><![CDATA[<!--link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin-->
+<script src="/scripts/snc-code-editor/monaco.bundle.min.jsx?sysparm_substitute=false"></script>
+<script src="/scripts/snc-code-editor/beautifier_1.14.0.jsx?v=07-23-2023_0036&sysparm_substitute=false"></script>
+<script src="/scripts/snc-code-editor/ts.worker.bundle.min.jsx?sysparm_substitute=false"></script>
+<script src="/scripts/monacoIncludes.jsx"></script>
 
-<div id="mm-widget-container">
+<div id="mm-widget-container" ng-init="c.loadEditors()">
 
   <div class="row123" id="endpoint-input">
     <form name="inputForm">
@@ -1183,13 +1283,13 @@ pre.CodeMirror-line {
                     <tbody>
                       <tr ng-repeat="item in c.data.headersNew">
                         <td width="30%" class="vertical-middle" ng-class="{'bg-edit': item.editingKey}">
-                          <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">
+                          <span class="full-span" ng-if="!item.editingKey" ng-click="c.startEditing(item, 'key', $event)">
                             {{item.key}}
                           </span>
                           <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
                         </td>
                         <td width="50%" class="vertical-middle" ng-class="{'bg-edit': item.editingValue}">
-                          <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">
+                          <span class="full-span" ng-if="!item.editingValue" ng-click="c.startEditing(item, 'value', $event)">
                             {{item.value}}
                           </span>
                           <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')" />
@@ -1227,21 +1327,21 @@ pre.CodeMirror-line {
                   <table id="query-params-table" class="table no-bottom-margin" width="100%">
                     <thead>
                       <tr>
-                        <th width="30%">Key1</th>
-                        <th width="50%">Value1</th>
-                        <th width="20%" class="text-center">Actions1</th>
+                        <th width="30%">Key</th>
+                        <th width="50%">Value</th>
+                        <th width="20%" class="text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr ng-repeat="item in c.data.queryParams">
                         <td width="30%" class="vertical-middle" ng-class="{'bg-edit': item.editingKey}">
-                          <span class="full-span" ng-if="!item.editingKey" ng-dblclick="c.startEditing(item, 'key', $event)">
+                          <span class="full-span" ng-if="!item.editingKey" ng-click="c.startEditing(item, 'key', $event)">
                             {{item.key}}
                           </span>
                           <input class="editable-input" ng-if="item.editingKey" ng-model="item.key" ng-blur="c.doneEditing(item, 'key')" autofocus />
                         </td>
                         <td width="50%" class="vertical-middle" ng-class="{'bg-edit': item.editingValue}">
-                          <span class="full-span" ng-if="!item.editingValue" ng-dblclick="c.startEditing(item, 'value', $event)">
+                          <span class="full-span" ng-if="!item.editingValue" ng-click="c.startEditing(item, 'value', $event)">
                             {{item.value}}
                           </span>
                           <input class="editable-input" ng-if="item.editingValue" ng-model="item.value" ng-blur="c.doneEditing(item, 'value')" />
@@ -1288,13 +1388,17 @@ pre.CodeMirror-line {
             </md-toolbar-filler>
             <div class="md-toolbar-tools">
               <h2 flex md-truncate>Request Body</h2>
+              <md-select class="md-no-underline remove-shadow" ng-model="c.requestContentType" ng-change="c.changeReqEditorLanguage()" placeholder="Content-Type">
+                <md-option style="border: none !important; box-shadow: none !important; "  value="json">JSON</md-option>
+                <md-option style="border: none !important; box-shadow: none !important;"  value="xml">XML</md-option>
+              </md-select>
               <md-button ng-click="c.toggleLineWrap($event, 'req')" class="md-icon-button">
                 <md-icon>wrap_text</md-icon>
               </md-button>
               <md-button ng-click="c.copy(c.data.requestBody.value, 'req')" class="md-icon-button">
                 <md-icon>content_copy</md-icon>
               </md-button>
-              <md-button class="md-icon-button" ng-click="c.openJCModal($event, c.data.requestBody.value)" ng-if="c.data.requestBody.value != '' && c.data.requestBody.value != '{}'">
+              <md-button class="md-icon-button" ng-click="c.openJCModal($event, c.data.requestBody.value)" ng-if="c.data.requestBody.value != ''">
                 <md-icon>code</md-icon>
               </md-button>
             </div>
@@ -1302,8 +1406,9 @@ pre.CodeMirror-line {
         </md-toolbar>
 
         <md-content flex="column">
-          <textarea class="form-control" ng-model="c.data.requestBody.value" ng-if="c.isMobile"></textarea>
-          <sp-script-editor id="editor" field="c.data.requestBody" data-length="4000" sn-disabled="false" sn-widget-scope-js-level="traditional" sn-server-side="false" ng-if="!c.isMobile" />
+          <div style="height: 300px" id="request-editor-{{c.instanceID}}"></div>
+          <!--textarea class="form-control" ng-model="c.data.requestBody.value" ng-if="c.isMobile"></textarea>
+          <sp-script-editor id="editor" field="c.data.requestBody" data-length="4000" sn-disabled="false" sn-widget-scope-js-level="traditional" sn-server-side="false" ng-if="!c.isMobile" /-->
         </md-content>
       </md-content>
 
@@ -1332,7 +1437,8 @@ pre.CodeMirror-line {
         </md-toolbar>
 
         <md-content flex="column">
-          <sp-script-editor id="editor" field="c.data.responseBody" data-length="4000" class="form-control" sn-disabled="true" sn-widget-scope-js-level="traditional" sn-server-side="false" />-->
+          <div style="height: 300px" id="response-editor-{{c.instanceID}}"></div>
+          <!--sp-script-editor id="editor" field="c.data.responseBody" data-length="4000" class="form-control" sn-disabled="true" sn-widget-scope-js-level="traditional" sn-server-side="false" />-->
           <!--<sp-html-editor id="editor" field="c.data.responseBody" data-length="4000" class="form-control" sn-disabled="true"/>-->
         </md-content>
       </md-content>
@@ -1340,4 +1446,15 @@ pre.CodeMirror-line {
   </div>
 </div>]]></template>
     </sp_widget>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>ace52c9197ce311056e8b3e6f053afb8</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-12-01 14:43:59</sys_created_on>
+        <sys_id>048373443b52de10352c0e1c95e45abe</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-12-01 14:43:59</sys_updated_on>
+        <table>sp_widget</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
